@@ -3,18 +3,17 @@ package com.example.takepack;
 import androidx.appcompat.app.AppCompatActivity;
 
 
-import android.app.AlertDialog;
+
 import android.app.Dialog;
 import android.app.FragmentManager;
-import android.content.Context;
-import android.content.DialogInterface;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
+
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -27,15 +26,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private FragmentManager fragmentManager;
     private MapFragment mapFragment;
-
     private String title;
-    private Button hidebtn;
-
-
-
-
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,8 +35,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         fragmentManager=getFragmentManager();
         mapFragment = (MapFragment) fragmentManager.findFragmentById(R.id.googleMap);
         mapFragment.getMapAsync(this);
+        Button listmode = (Button) findViewById(R.id.listMode);
+        listmode.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), ItemListActivity.class);
+                startActivity(intent);
 
-
+            }
+        });
     }
 
     @Override
@@ -80,7 +78,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         mOption.title(title);
                         Double latitude = point.latitude; // 위도
                         Double longitude = point.longitude; // 경도
-                        mOption.snippet("엄청이뻐 ㅋ");
+                        mOption.snippet("추가한list내용");
                         mOption.position(new LatLng(latitude, longitude));
                         googleMap.addMarker(mOption);
                         ad.dismiss();
@@ -93,7 +91,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     }
                 });
                 ad.show();
-
             }
         });
         LatLng location = new LatLng(36.892498, 126.628380); //우리집 위치

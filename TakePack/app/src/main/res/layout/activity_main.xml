@@ -6,13 +6,23 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-
+    <FrameLayout
+        android:id="@+id/fram_map"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" >
     <fragment
         android:id="@+id/googleMap"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         class="com.google.android.gms.maps.MapFragment"
         />
-
-
+        <Button
+            android:id="@+id/listMode"
+            android:text="내 소지품 확인하기"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_gravity="right|top"
+            android:layout_marginTop="5dp"
+            android:layout_marginRight="8dp" />
+    </FrameLayout>
 </LinearLayout>
