@@ -23,12 +23,7 @@ public class ItemListActivity extends AppCompatActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_itemlist);
 
-
-
         Items = new ArrayList<String>();
-        Items.add("First");
-        Items.add("Second");
-        Items.add("Third");
 
         Adapter = new ArrayAdapter<String>(this,
                 android.R.layout.simple_list_item_single_choice, Items);

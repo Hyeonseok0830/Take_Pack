@@ -17,6 +17,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".ItemListActivity"/>
+        <activity android:name=".PopupActivity"/>
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyCtbzLdky-6r3a1rD_mehU_eWpPsttPHXg"/>

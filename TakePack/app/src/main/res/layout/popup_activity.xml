@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:background="#eeeeee"
     android:orientation="vertical"
-    android:layout_width="300dp"
-    android:layout_height="500dp">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".PopupActivity">
 
     <!-- 타이틀바 -->
     <LinearLayout
@@ -54,12 +56,11 @@
         <ListView
             android:id="@+id/list_item"
             android:layout_width="match_parent"
-            android:layout_height="255dp"
+            android:layout_height="250dp"
             android:layout_marginBottom="3dp"
             android:alpha="0.87"
             android:gravity="center"
-            android:textColor="#000"
-            android:textSize="15sp" />
+            android:textColor="#000" />
 
     </LinearLayout>
     <!-- Notice -->
@@ -97,7 +98,7 @@
             android:background="#00000000"
             android:layout_width="wrap_content"
             android:layout_height="53dp"
-            android:onClick="mOnClose"/>
+           />
     </LinearLayout>
     <!--// 닫기 버튼 -->
 </LinearLayout>
