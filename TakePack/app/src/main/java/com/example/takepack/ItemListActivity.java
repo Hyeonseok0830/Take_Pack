@@ -12,7 +12,7 @@ import java.util.ArrayList;
 
 public class ItemListActivity extends AppCompatActivity{
 
-    ArrayList<String> Items;
+    public static ArrayList<String> Items;
     ArrayAdapter<String> Adapter;
     ListView listView;
     Button btnAdd, btnDel;
@@ -27,7 +27,7 @@ public class ItemListActivity extends AppCompatActivity{
 
         Adapter = new ArrayAdapter<String>(this,
                 android.R.layout.simple_list_item_single_choice, Items);
-        listView = (ListView) findViewById(R.id.listView);
+        listView = (ListView) findViewById(R.id.listView1);
         listView.setAdapter(Adapter);
         listView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
 

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="#eeeeee"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+   >
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="248dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/name"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginBottom="3dp"
+                android:alpha="0.87"
+                android:gravity="center"
+                android:hint="이 장소 이름을 입력하세요"
+                android:maxLength="15"
+                android:textColor="#000"
+                android:textSize="15sp" />
+
+        </LinearLayout>
+        <ListView
+            android:id="@+id/list_item"
+            android:layout_width="match_parent"
+            android:layout_height="250dp"
+            android:layout_marginBottom="3dp"
+            android:alpha="0.87"
+            android:gravity="center"
+            android:textColor="#000"
+            android:choiceMode="multipleChoice"/>
+<LinearLayout
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    >
+        <Button
+            android:id="@+id/check"
+            android:layout_width="wrap_content"
+            android:layout_height="53dp"
+            android:background="#00000000"
+            android:gravity="center"
+            android:padding="16dp"
+            android:text="확인"
+            android:textColor="#ff7a00"
+            android:textSize="15sp" />
+<TextView
+    android:layout_width="60dp"
+    android:layout_height="0dp"></TextView>
+        <Button
+            android:id="@+id/cancel"
+            android:layout_width="wrap_content"
+            android:layout_height="53dp"
+            android:background="#00000000"
+            android:gravity="center"
+            android:padding="16dp"
+            android:text="취소"
+            android:textColor="#ff7a00"
+            android:textSize="15sp" />
+    </LinearLayout>
+    </LinearLayout>
+</LinearLayout>
+
+

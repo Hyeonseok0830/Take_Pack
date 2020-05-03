@@ -5,8 +5,7 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".PopupActivity">
-
+   >
     <!-- 타이틀바 -->
     <LinearLayout
         android:orientation="horizontal"
@@ -42,16 +41,6 @@
             android:hint="이 장소 이름을 입력하세요"
             />
 
-        <Button
-            android:id="@+id/keyhide"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_gravity="right"
-            android:layout_marginBottom="3dp"
-            android:alpha="0.87"
-            android:gravity="center"
-            android:text="확인"
-            android:textColor="#000" />
 
         <ListView
             android:id="@+id/list_item"
@@ -60,7 +49,8 @@
             android:layout_marginBottom="3dp"
             android:alpha="0.87"
             android:gravity="center"
-            android:textColor="#000" />
+            android:textColor="#000"
+            android:choiceMode="multipleChoice"/>
 
     </LinearLayout>
     <!-- Notice -->
