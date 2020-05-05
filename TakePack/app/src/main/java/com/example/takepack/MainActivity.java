@@ -98,9 +98,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 final LatLng c_location = new LatLng(point.latitude,point.longitude); //커스텀 위치
                 final MarkerOptions mop = new MarkerOptions();
                 final List<String> ListItems = new ArrayList<>();
-                for(int i=0;i<testitem.size();i++)
-                {
+//102라인 문제 있음
+                if(!testitem.isEmpty()){
+                for(int i=0;i<testitem.size();i++) {
                     ListItems.add(testitem.get(i));
+                    }
                 }
 
                 final CharSequence[] items =  ListItems.toArray(new String[ ListItems.size()]);
