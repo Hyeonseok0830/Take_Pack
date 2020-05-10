@@ -4,19 +4,12 @@ package com.example.takepack;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Debug;
-import android.util.Log;
 import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ListView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -30,36 +23,51 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-
-public class LoginActivity extends AppCompatActivity {
+//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+//        super.onActivityResult(requestCode, resultCode, data);
+//        if (requestCode == REQUEST_CODE_MENU) {
+//            if (resultCode == RESULT_OK) {
+//                String menu = data.getExtras().getString("menu");
+//                Toast.makeText(getApplicationContext(), "응답으로 전달된 menu :" + menu, Toast.LENGTH_LONG).show();
+//            }
+//        }
+//    }
+public class JoinActivity extends AppCompatActivity {
     public static final int REQUEST_CODE_MENU = 101;
-    String userid = "identity";
-    String userpw = "password";
+    String userid = "1";
+    String userpw = "1";
     EditText id;
+    EditText name;
     EditText pw;
-
+    EditText pwc;
+    EditText email;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_login);
+        setContentView(R.layout.activity_join);
 
-        id = (EditText) findViewById(R.id.eid);
-        pw = (EditText) findViewById(R.id.epw);
+        id = (EditText) findViewById(R.id.jid);
+        name = (EditText) findViewById(R.id.jname);
+        pw = (EditText) findViewById(R.id.jpw);
+        pwc = (EditText) findViewById(R.id.jpwc);
+        email = (EditText) findViewById(R.id.jemail);
     }
 
-    public void join(View view) {
-        Intent intent = new Intent(this, JoinActivity.class);
-        startActivity(intent);
-
+    public void submit(View view) {
+        if (pw.getText().toString().equals(pwc.getText().toString())) {
+            new Post().execute("http://192.168.219.121:3000/user/join");
+            finish();
+        } else Toast.makeText(JoinActivity.this, "비밀번호를 확인해주세요.", Toast.LENGTH_LONG).show();
     }
 
-    public void login(View v) {
-      //  Toast.makeText(getApplicationContext(), "로그인버튼눌렀따", Toast.LENGTH_SHORT).show();
-        new login_Post().execute("http://192.168.219.121:3000/user/login");
-
+    public void cancel(View view) {
+        finish();
+        Toast.makeText(JoinActivity.this, "cancel", Toast.LENGTH_LONG).show();
     }
 
-    public class login_Post extends AsyncTask<String, String, String> {
+//Toast.makeText(JoinActivity.this, "put", Toast.LENGTH_LONG).show();
+    // 안스에서 노드js로 데이터 보내는 부분
+    public class Post extends AsyncTask<String, String, String> {
         @Override
         protected String doInBackground(String... urls) {
             try {
@@ -69,8 +77,9 @@ public class LoginActivity extends AppCompatActivity {
                 jsonObject.put("name", "yun");*/
 
                 jsonObject.put("id", id.getText().toString());
+                jsonObject.put("name", name.getText().toString());
                 jsonObject.put("pw", pw.getText().toString());
-
+                jsonObject.put("email", email.getText().toString());
 
                 HttpURLConnection con = null;
                 BufferedReader reader = null;
@@ -133,44 +142,18 @@ public class LoginActivity extends AppCompatActivity {
 
             return null;
         }
-        protected void onPostExecute(String result) {
-          Log.d("reslut",result);
-          String x = result.substring(result.indexOf(":")+1,result.indexOf(","));
 
-            if(x.equals("200"))
-            {
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+            //  testpost.setText(result);//서버로 부터 받은 값을 출력해주는 부분
+            String x = result.substring(result.indexOf(":")+1,result.indexOf(","));
+            if(x.equals("404"))
                 Toast.makeText(getApplicationContext(), x, Toast.LENGTH_SHORT).show();
-                Intent main_intent = new Intent(LoginActivity.this, MainActivity.class);
-                startActivity(main_intent);
-                finish();
-            }
             else
-            {
-                Toast.makeText(getApplicationContext(), "아이디 또는 비밀번호를 확인하세요", Toast.LENGTH_SHORT).show();
-            }
+                Toast.makeText(getApplicationContext(), x, Toast.LENGTH_SHORT).show();
 
         }
 
 
-
     }
 }
-
-
-
-
-//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        super.onActivityResult(requestCode, resultCode, data);
-//        if (requestCode == REQUEST_CODE_MENU) {
-//            if (resultCode == RESULT_OK) {
-//                String menu = data.getExtras().getString("menu");
-//                Toast.makeText(getApplicationContext(), "응답으로 전달된 menu :" + menu, Toast.LENGTH_LONG).show();
-//            }
-//        }
-//    }
-
-    // 안스에서 노드js로 데이터 보내는 부분
-
-
-
-

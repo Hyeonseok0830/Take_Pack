@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    tools:context=".JoinActivity"
+    android:orientation="vertical"
+    >
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/textViewID"
+            android:layout_width="100dp"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:text="ID"
+            android:textSize="20dp" />
+
+        <EditText
+            android:id="@+id/jid"
+            android:layout_width="213dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:hint="ID" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/name"
+            android:layout_width="100dp"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:text="이름"
+            android:textSize="20dp" />
+
+        <EditText
+            android:id="@+id/jname"
+            android:layout_width="213dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:hint="Name" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/textViewpw"
+            android:layout_width="100dp"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:text="비밀번호"
+            android:textSize="20dp" />
+
+        <EditText
+            android:id="@+id/jpw"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:ems="10"
+            android:hint="password"
+            android:inputType="textPassword" />
+
+    </LinearLayout>
+
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/checkpw"
+            android:layout_width="100dp"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:text="비밀번호\n 확인"
+            android:textSize="20dp" />
+
+        <EditText
+            android:id="@+id/jpwc"
+            android:layout_width="213dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:hint="password"
+            android:inputType="textPassword" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/email"
+            android:layout_width="100dp"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:text="Email"
+            android:textSize="20dp" />
+
+        <EditText
+            android:id="@+id/jemail"
+            android:layout_width="213dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:hint="ID" />
+
+    </LinearLayout>
+
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        >
+    <Button
+        android:id="@+id/injoin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="0"
+        android:layout_alignParentLeft="true"
+        android:text="가입하기"
+        android:onClick="submit"
+        />
+        <!--android:onClick="join"-->
+<TextView
+    android:layout_width="50dp"
+    android:layout_height="0dp"
+    android:id="@+id/yame"
+    android:layout_toRightOf="@id/injoin"
+    />
+    <Button
+        android:id="@+id/cancel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="0"
+        android:layout_toRightOf="@id/yame"
+        android:text="취소"
+        android:onClick="cancel"
+        />
+    <!--android:onClick="login"-->
+    </RelativeLayout>
+</LinearLayout>
+
