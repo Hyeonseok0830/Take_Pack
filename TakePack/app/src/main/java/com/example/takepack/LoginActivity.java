@@ -134,7 +134,7 @@ public class LoginActivity extends AppCompatActivity {
             return null;
         }
         protected void onPostExecute(String result) {
-          Log.d("reslut",result);
+//          Log.d("reslut",result);
           String x = result.substring(result.indexOf(":")+1,result.indexOf(","));
 
             if(x.equals("200"))
