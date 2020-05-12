@@ -10,6 +10,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -146,11 +147,25 @@ public class JoinActivity extends AppCompatActivity {
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
             //  testpost.setText(result);//서버로 부터 받은 값을 출력해주는 부분
-            String x = result.substring(result.indexOf(":")+1,result.indexOf(","));
-            if(x.equals("404"))
-                Toast.makeText(getApplicationContext(), x, Toast.LENGTH_SHORT).show();
-            else
-                Toast.makeText(getApplicationContext(), x, Toast.LENGTH_SHORT).show();
+            try {
+                JSONObject jsonObject = new JSONObject(result);
+                String msg = jsonObject.getString("code");
+
+                if ( msg.equals("200")){
+                    Toast.makeText(getApplicationContext(),"회원가입 성공",Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+                else {
+                    Toast.makeText(getApplicationContext(),"회원가입 실패",Toast.LENGTH_SHORT).show();
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+//            String x = result.substring(result.indexOf(":")+1,result.indexOf(","));
+//            if(x.equals("404"))
+//                Toast.makeText(getApplicationContext(), x, Toast.LENGTH_SHORT).show();
+//            else
+//                Toast.makeText(getApplicationContext(), x, Toast.LENGTH_SHORT).show();
 
         }
 

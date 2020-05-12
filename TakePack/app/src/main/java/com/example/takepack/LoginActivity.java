@@ -33,8 +33,7 @@ import java.net.URL;
 
 public class LoginActivity extends AppCompatActivity {
     public static final int REQUEST_CODE_MENU = 101;
-    String userid = "identity";
-    String userpw = "password";
+
     EditText id;
     EditText pw;
 
@@ -57,6 +56,7 @@ public class LoginActivity extends AppCompatActivity {
       //  Toast.makeText(getApplicationContext(), "로그인버튼눌렀따", Toast.LENGTH_SHORT).show();
         new login_Post().execute("http://192.168.219.121:3000/user/login");
 
+
     }
 
     public class login_Post extends AsyncTask<String, String, String> {
@@ -67,10 +67,8 @@ public class LoginActivity extends AppCompatActivity {
                 JSONObject jsonObject = new JSONObject();
                 /*jsonObject.put("user_id", "androidTest");
                 jsonObject.put("name", "yun");*/
-
                 jsonObject.put("id", id.getText().toString());
                 jsonObject.put("pw", pw.getText().toString());
-
 
                 HttpURLConnection con = null;
                 BufferedReader reader = null;
@@ -135,19 +133,38 @@ public class LoginActivity extends AppCompatActivity {
         }
         protected void onPostExecute(String result) {
 //          Log.d("reslut",result);
-          String x = result.substring(result.indexOf(":")+1,result.indexOf(","));
+      //    String x = result.substring(result.indexOf(":")+1,result.indexOf(","));
+            try {
 
-            if(x.equals("200"))
-            {
-                Toast.makeText(getApplicationContext(), x, Toast.LENGTH_SHORT).show();
-                Intent main_intent = new Intent(LoginActivity.this, MainActivity.class);
-                startActivity(main_intent);
-                finish();
+                JSONObject jsonObject = new JSONObject(result);
+                String code= jsonObject.getString("code");
+                String name = jsonObject.getString("message");
+                String user_id = jsonObject.getString("id");
+
+                if ( code.equals("200")){
+                    Toast.makeText(getApplicationContext(),name,Toast.LENGTH_SHORT).show();
+                    Intent main_intent = new Intent(LoginActivity.this, MainActivity.class);
+                    main_intent.putExtra("uid",user_id);
+                    startActivity(main_intent);
+                    finish();
+                }
+                else {
+                    Toast.makeText(getApplicationContext(),"로그인 실패",Toast.LENGTH_SHORT).show();
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
-            else
-            {
-                Toast.makeText(getApplicationContext(), "아이디 또는 비밀번호를 확인하세요", Toast.LENGTH_SHORT).show();
-            }
+//            if(x.equals("200"))
+//            {
+//                Toast.makeText(getApplicationContext(), x, Toast.LENGTH_SHORT).show();
+//                Intent main_intent = new Intent(LoginActivity.this, MainActivity.class);
+//                startActivity(main_intent);
+//                finish();
+//            }
+//            else
+//            {
+//                Toast.makeText(getApplicationContext(), "아이디 또는 비밀번호를 확인하세요", Toast.LENGTH_SHORT).show();
+//            }
 
         }
 
