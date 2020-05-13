@@ -36,6 +36,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -67,22 +68,25 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private double m_lon;
 
 
-    GoogleMap mMap;
 
+    String user_id;
 
-
-
+    int getitem_count;
+    String[] location_name;
+    String[] item_name;
+    double[] lat;
+    double[] lng;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        new init_Maker_Post().execute("http://192.168.219.121:3000/user/maker");
         fragmentManager=getFragmentManager();
         mapFragment = (MapFragment) fragmentManager.findFragmentById(R.id.googleMap);
         mapFragment.getMapAsync(this);
         Intent Mintent = getIntent();
 
-        final String user_id= Mintent.getExtras().getString("uid");
+        user_id= Mintent.getExtras().getString("uid");
 
         Button listmode = (Button) findViewById(R.id.listMode);
         listmode.setOnClickListener(new View.OnClickListener() {
@@ -94,14 +98,108 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
 
-    }
-
-    private void showAlertDialog()
-    {
 
     }
 
+    public class init_Maker_Post extends AsyncTask<String, String, String> {
+        @Override
+        protected String doInBackground(String... urls) {
+            try {
+                //JSONObject를 만들고 key value 형식으로 값을 저장해준다.
+                JSONObject jsonObject = new JSONObject();
 
+                jsonObject.put("id", user_id);
+
+                HttpURLConnection con = null;
+                BufferedReader reader = null;
+
+                try {
+                    //URL url = new URL("http://192.168.25.16:3000/users");
+                    URL url = new URL(urls[0]);
+                    //연결을 함
+                    con = (HttpURLConnection) url.openConnection();
+                    con.setRequestMethod("POST");//POST방식으로 보냄
+                    con.setRequestProperty("Cache-Control", "no-cache");//캐시 설정
+                    con.setRequestProperty("Content-Type", "application/json");//application JSON 형식으로 전송
+                    con.setRequestProperty("Accept", "text/html");//서버에 response 데이터를 html로 받음
+                    con.setDoOutput(true);//Outstream으로 post 데이터를 넘겨주겠다는 의미
+                    con.setDoInput(true);//Inputstream으로 서버로부터 응답을 받겠다는 의미
+                    con.connect();
+
+                    //서버로 보내기위해서 스트림 만듬
+                    OutputStream outStream = con.getOutputStream();
+                    //버퍼를 생성하고 넣음
+                    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outStream));
+                    writer.write(jsonObject.toString());
+                    writer.flush();
+                    writer.close();//버퍼를 받아줌
+
+                    //서버로 부터 데이터를 받음
+                    InputStream stream = con.getInputStream();
+                    reader = new BufferedReader(new InputStreamReader(stream));
+                    StringBuffer buffer = new StringBuffer();
+                    String line = "";
+                    while ((line = reader.readLine()) != null) {
+                        buffer.append(line);
+                    }
+                    return buffer.toString();//서버로 부터 받은 값을 리턴해줌 아마 OK!!가 들어올것임
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    if (con != null) {
+                        con.disconnect();
+                    }
+                    try {
+                        if (reader != null) {
+                            reader.close();//버퍼를 닫아줌
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+
+        protected void onPostExecute(String result) {
+//          Log.d("reslut",result);
+            //    String x = result.substring(result.indexOf(":")+1,result.indexOf(","));
+            try {
+                JSONObject jsonObject = new JSONObject(result);
+                String code = jsonObject.getString("code");
+                String msg = jsonObject.getString("message");
+                String itemlist = jsonObject.getString("item");
+                JSONArray getitem = new JSONArray(itemlist);
+                getitem_count=getitem.length();
+
+                location_name = new String[getitem_count];
+                item_name = new String[getitem_count]; //decription 저장용
+                lat = new double[getitem_count]; //link 저장용
+                lng = new double[getitem_count]; //imageUrl 저장용
+                for(int i=0;i<getitem_count;i++)
+                {
+                    JSONObject itemobject = getitem.getJSONObject(i);
+                    location_name[i]=itemobject.getString("name");
+                    item_name[i]=itemobject.getString("item_name");
+                    lat[i]=itemobject.getDouble("lat");
+                    lng[i]=itemobject.getDouble("lng");
+                }
+
+                if (code.equals("200")) {
+                    Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getApplicationContext(), "실패", Toast.LENGTH_SHORT).show();
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
     @Override
     public void onMapReady(final GoogleMap googleMap) {
 
@@ -163,7 +261,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 mop.snippet(temp);
                                 mop.position(c_location);
                                 googleMap.addMarker(mop);
-                                Log.d("temp값",temp);
+//                                Log.d("temp값",temp);
                                 Toast.makeText(getApplicationContext(),
                                         "Total "+ SelectedItems.size() +" Items Selected.\n"+ msg , Toast.LENGTH_LONG)
                                         .show();
@@ -180,14 +278,41 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
           }
 
         });
-
-        LatLng location = new LatLng(36.379064, 128.146616); //우리집 위치
+        String test="" ;
+        String item_snippet="";
+  //  int getitem_count;
+        //    String[] location_name;
+        //    String[] item_name;
+        //    double[] lat;
+        //    double[] lng;
+        // 디비에서 받아오는 거 까지 완료 하였으니 받아온 내용을 바탕으로 마커 추가하는 작업 필요
+//        for(int i=0;i<getitem_count;i++)
+//        {
+//            MarkerOptions mop = new MarkerOptions();
+//            if(test!=location_name[i]) {
+//                if(test!="")
+//                {
+//                    googleMap.addMarker(mop);
+//                }
+//                item_snippet="";
+//                test=location_name[i];
+//                mop.title(location_name[i]);
+//                mop.position(new LatLng(lat[i], lng[i]));
+//                item_snippet+=item_name[i]+",";
+//            }
+//            else
+//            {
+//                item_snippet+=item_name[i]+",";
+//            }
+//        }
+        LatLng location = new LatLng(36.379064, 128.146616); //현재 내 위치
         MarkerOptions markerOptions = new MarkerOptions();
-        markerOptions.title("우리집");
-        markerOptions.snippet("스니펫");
+//        markerOptions.title("우리집");
+//        markerOptions.snippet("스니펫");
         markerOptions.position(location);
-        googleMap.addMarker(markerOptions);
+       // googleMap.addMarker(markerOptions);
         googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 16));
+
 
     }
 

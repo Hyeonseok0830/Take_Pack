@@ -82,6 +82,7 @@ public class ItemListActivity extends AppCompatActivity {
                         Items.add(item_name);
                         editText.setText("");
                         Adapter.notifyDataSetChanged();
+
                         new add_Item_Post().execute("http://192.168.219.121:3000/user/add_item");
                     }
                     break;
