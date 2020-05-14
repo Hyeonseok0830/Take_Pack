@@ -15,6 +15,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.util.Pair;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -31,6 +32,7 @@ import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMapOptions;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
@@ -53,8 +55,10 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
 
@@ -64,9 +68,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private MarkerOptions mop = new MarkerOptions();
 
-    private double m_lat;
-    private double m_lon;
 
+
+    String add_name;
+    int insert_count;
+    String add_item_list;
+    double add_lat;
+    double add_lng;
 
 
     String user_id;
@@ -76,17 +84,22 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     String[] item_name;
     double[] lat;
     double[] lng;
+    String location_temp="" ;
+    String item_temp="" ;
+    double lat_temp=0.0;
+    double lng_temp=0.0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Intent Mintent = getIntent();
+        user_id= Mintent.getExtras().getString("uid");
+        new init_Maker_Post().execute("http://192.168.219.121:3000/user/marker");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        new init_Maker_Post().execute("http://192.168.219.121:3000/user/maker");
+
         fragmentManager=getFragmentManager();
         mapFragment = (MapFragment) fragmentManager.findFragmentById(R.id.googleMap);
         mapFragment.getMapAsync(this);
-        Intent Mintent = getIntent();
 
-        user_id= Mintent.getExtras().getString("uid");
 
         Button listmode = (Button) findViewById(R.id.listMode);
         listmode.setOnClickListener(new View.OnClickListener() {
@@ -167,8 +180,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
         protected void onPostExecute(String result) {
-//          Log.d("reslut",result);
-            //    String x = result.substring(result.indexOf(":")+1,result.indexOf(","));
             try {
                 JSONObject jsonObject = new JSONObject(result);
                 String code = jsonObject.getString("code");
@@ -188,6 +199,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     item_name[i]=itemobject.getString("item_name");
                     lat[i]=itemobject.getDouble("lat");
                     lng[i]=itemobject.getDouble("lng");
+                    System.out.println(item_name[i]);
                 }
 
                 if (code.equals("200")) {
@@ -200,6 +212,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         }
     }
+
     @Override
     public void onMapReady(final GoogleMap googleMap) {
 
@@ -209,18 +222,22 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
             public void onMapLongClick(final LatLng point) {
+
+
                 final ItemListActivity listActivity = new ItemListActivity();
                 final ArrayList<String> testitem = listActivity.Items;
 
                 final LatLng c_location = new LatLng(point.latitude,point.longitude); //커스텀 위치
+                add_lat=point.latitude;
+                add_lng=point.longitude;
                 final MarkerOptions mop = new MarkerOptions();
                 final List<String> ListItems = new ArrayList<>();
 //102라인 문제 있음
-                if(!testitem.isEmpty()){
+                //if(testitem.size()>0){
                 for(int i=0;i<testitem.size();i++) {
                     ListItems.add(testitem.get(i));
                     }
-                }
+                //}
 
                 final CharSequence[] items =  ListItems.toArray(new String[ ListItems.size()]);
 
@@ -252,19 +269,25 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 String temp="";
                                 for (int i = 0; i < SelectedItems.size(); i++) {
                                     int index = (int) SelectedItems.get(i);
-                                    mop.title(edittext.getText().toString());
                                     msg=msg+"\n"+(i+1)+" : " +ListItems.get(index);
                                     temp+=ListItems.get(index)+",";
 
                                 }
+
+                                mop.title(edittext.getText().toString());
                                 temp = temp.substring(0,temp.length()-1);
                                 mop.snippet(temp);
                                 mop.position(c_location);
                                 googleMap.addMarker(mop);
+                                add_name=edittext.getText().toString();
+                                insert_count = SelectedItems.size();
+                                add_item_list = temp;//nodejs에서 split후 string[] 에 담아 insert사용
+
 //                                Log.d("temp값",temp);
                                 Toast.makeText(getApplicationContext(),
                                         "Total "+ SelectedItems.size() +" Items Selected.\n"+ msg , Toast.LENGTH_LONG)
                                         .show();
+                                new add_Maker_Post().execute("http://192.168.219.121:3000/user/add_marker");
                             }
                         });
                 builder.setNegativeButton("Cancel",
@@ -278,8 +301,43 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
           }
 
         });
-        String test="" ;
-        String item_snippet="";
+        LinkedHashMap hash = new LinkedHashMap<String,String>();
+
+        ArrayList <Pair<Double, Double>> pairs = new ArrayList<>();
+        ArrayList <Pair<String,String>> p = new ArrayList<>();
+        for(int i=0;i<getitem_count;i++)
+        {
+            if(hash.containsKey(location_name[i]))//장소이름이 중복될 경우
+            {
+                item_temp += item_name[i] + ",";
+                hash.put(location_name[i], item_temp);
+            }
+            else//새로운 장소를 추가하는 경우
+            {
+                item_temp="";
+                item_temp += item_name[i] + ",";
+                hash.put(location_name[i], item_temp);
+                pairs.add(new Pair<>(lat[i],lng[i]));
+
+            }
+        }
+        MarkerOptions m = new MarkerOptions();
+        Set<Map.Entry<String, String>> entries = hash.entrySet();
+        int x=0;
+        for (Map.Entry<String, String> entry : entries) {
+
+            System.out.print("key: "+ entry.getKey());
+            System.out.println(", Value: "+ entry.getValue());
+
+            m.title(entry.getKey())
+                    .snippet(entry.getValue().substring(0,entry.getValue().length()-1))
+            .position(new LatLng(pairs.get(x).first,pairs.get(x).second));
+            googleMap.addMarker(m);
+            x++;
+
+        }
+
+
   //  int getitem_count;
         //    String[] location_name;
         //    String[] item_name;
@@ -305,7 +363,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 //                item_snippet+=item_name[i]+",";
 //            }
 //        }
-        LatLng location = new LatLng(36.379064, 128.146616); //현재 내 위치
+        LatLng location = new LatLng(35.229688, 128.577900); //현재 내 위치
         MarkerOptions markerOptions = new MarkerOptions();
 //        markerOptions.title("우리집");
 //        markerOptions.snippet("스니펫");
@@ -315,5 +373,91 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
     }
+    public class add_Maker_Post extends AsyncTask<String, String, String> {
+        @Override
+        protected String doInBackground(String... urls) {
+            try {
+                //JSONObject를 만들고 key value 형식으로 값을 저장해준다.
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("id", user_id);
+                jsonObject.put("name", add_name);
+                jsonObject.put("item_list", add_item_list);
+                jsonObject.put("lat", add_lat);
+                jsonObject.put("lng", add_lng);
+                jsonObject.put("count", insert_count);
+                HttpURLConnection con = null;
+                BufferedReader reader = null;
 
+                try {
+                    //URL url = new URL("http://192.168.25.16:3000/users");
+                    URL url = new URL(urls[0]);
+                    //연결을 함
+                    con = (HttpURLConnection) url.openConnection();
+                    con.setRequestMethod("POST");//POST방식으로 보냄
+                    con.setRequestProperty("Cache-Control", "no-cache");//캐시 설정
+                    con.setRequestProperty("Content-Type", "application/json");//application JSON 형식으로 전송
+                    con.setRequestProperty("Accept", "text/html");//서버에 response 데이터를 html로 받음
+                    con.setDoOutput(true);//Outstream으로 post 데이터를 넘겨주겠다는 의미
+                    con.setDoInput(true);//Inputstream으로 서버로부터 응답을 받겠다는 의미
+                    con.connect();
+
+                    //서버로 보내기위해서 스트림 만듬
+                    OutputStream outStream = con.getOutputStream();
+                    //버퍼를 생성하고 넣음
+                    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outStream));
+                    writer.write(jsonObject.toString());
+                    writer.flush();
+                    writer.close();//버퍼를 받아줌
+
+                    //서버로 부터 데이터를 받음
+                    InputStream stream = con.getInputStream();
+                    reader = new BufferedReader(new InputStreamReader(stream));
+                    StringBuffer buffer = new StringBuffer();
+                    String line = "";
+                    while ((line = reader.readLine()) != null) {
+                        buffer.append(line);
+                    }
+                    return buffer.toString();//서버로 부터 받은 값을 리턴해줌 아마 OK!!가 들어올것임
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    if (con != null) {
+                        con.disconnect();
+                    }
+                    try {
+                        if (reader != null) {
+                            reader.close();//버퍼를 닫아줌
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+
+        protected void onPostExecute(String result) {
+//          Log.d("reslut",result);
+            //    String x = result.substring(result.indexOf(":")+1,result.indexOf(","));
+            try {
+                JSONObject jsonObject = new JSONObject(result);
+                String code = jsonObject.getString("code");
+                String msg = jsonObject.getString("message");
+
+
+                if (code.equals("200")) {
+                    Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getApplicationContext(), "실패", Toast.LENGTH_SHORT).show();
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }

@@ -174,7 +174,7 @@ public class ItemListActivity extends AppCompatActivity {
                 String code = jsonObject.getString("code");
                 String msg = jsonObject.getString("message");
                 if (code.equals("200")) {
-                    Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "나의 소지품을 등록해주세요!.", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(getApplicationContext(), "실패", Toast.LENGTH_SHORT).show();
                 }
