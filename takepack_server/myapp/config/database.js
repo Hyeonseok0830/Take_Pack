@@ -3,5 +3,6 @@ module.exports = {
   user     : 'root',
   password : 'knu2020!',
   port     : 3306,
-  database : 'takepack'
+  database : 'takepack',
+  multipleStatements: true 
 };
