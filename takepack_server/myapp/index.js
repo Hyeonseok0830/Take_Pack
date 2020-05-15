@@ -197,7 +197,7 @@ app.post('/user/marker', function (req, res) {
     connection.query(sql, userid, function (err, result) {
         var resultCode = 404;
         var message = '에러가 발생했습니다';
-        var item = '';
+      
         var List = new Array();
         if (err) {
             console.log(err);

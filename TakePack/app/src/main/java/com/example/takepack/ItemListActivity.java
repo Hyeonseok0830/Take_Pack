@@ -46,14 +46,14 @@ public class ItemListActivity extends AppCompatActivity {
 
         user_id = i.getExtras().getString("user_id");
         new Item_Post().execute("http://192.168.219.121:3000/user/list");
-
+        //list부분 메인부분으로 옮겨보기
         Items = new ArrayList<String>();
         Adapter = new ArrayAdapter<String>(this,
                 android.R.layout.simple_list_item_single_choice, Items);
         listView = (ListView) findViewById(R.id.listView1);
         listView.setAdapter(Adapter);
         listView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-
+//Main과 동시에 실행되어야함
 //        for(int a=0;a<result_item.length;a++)
 //            Items.add(result_item[a]);
 //        Adapter.notifyDataSetChanged();

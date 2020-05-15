@@ -88,6 +88,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     String item_temp="" ;
     double lat_temp=0.0;
     double lng_temp=0.0;
+    LatLng c_location;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Intent Mintent = getIntent();
@@ -223,11 +225,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             public void onMapLongClick(final LatLng point) {
 
+                //Itemlistactivity
+                ItemListActivity listActivity = new ItemListActivity();
+                ArrayList<String> testitem = listActivity.Items;
 
-                final ItemListActivity listActivity = new ItemListActivity();
-                final ArrayList<String> testitem = listActivity.Items;
-
-                final LatLng c_location = new LatLng(point.latitude,point.longitude); //커스텀 위치
+                c_location = new LatLng(point.latitude,point.longitude); //커스텀 위치
                 add_lat=point.latitude;
                 add_lng=point.longitude;
                 final MarkerOptions mop = new MarkerOptions();
