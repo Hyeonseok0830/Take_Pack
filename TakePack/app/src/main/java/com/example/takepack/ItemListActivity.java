@@ -29,7 +29,9 @@ import java.util.ArrayList;
 
 public class ItemListActivity extends AppCompatActivity {
 
-    public static ArrayList<String> Items;
+
+    MainActivity list;
+
     ArrayAdapter<String> Adapter;
     ListView listView;
     Button btnAdd, btnDel;
@@ -38,14 +40,17 @@ public class ItemListActivity extends AppCompatActivity {
     String[] result_item ;
     String item_name;
     String del_item;
+    ArrayList Items;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_itemlist);
         Intent i = getIntent();
-
         user_id = i.getExtras().getString("user_id");
         new Item_Post().execute("http://192.168.219.121:3000/user/list");
+
+
+        list = new MainActivity();
         //list부분 메인부분으로 옮겨보기
         Items = new ArrayList<String>();
         Adapter = new ArrayAdapter<String>(this,
@@ -69,6 +74,15 @@ public class ItemListActivity extends AppCompatActivity {
 
 
     }
+    @Override
+    public void onBackPressed() {
+
+        super.onBackPressed();
+        Toast.makeText(getApplicationContext(), "뒤로가기 버튼 누름!.", Toast.LENGTH_SHORT).show();
+    //    list.recreate();
+
+    }
+
 
     private View.OnClickListener listener = new View.OnClickListener() {
         @Override
@@ -81,6 +95,7 @@ public class ItemListActivity extends AppCompatActivity {
                     if (item_name.length() != 0) {
                         Items.add(item_name);
                         editText.setText("");
+
                         Adapter.notifyDataSetChanged();
 
                         new add_Item_Post().execute("http://192.168.219.121:3000/user/add_item");
@@ -174,7 +189,7 @@ public class ItemListActivity extends AppCompatActivity {
                 String code = jsonObject.getString("code");
                 String msg = jsonObject.getString("message");
                 if (code.equals("200")) {
-                    Toast.makeText(getApplicationContext(), "나의 소지품을 등록해주세요!.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(getApplicationContext(), "실패", Toast.LENGTH_SHORT).show();
                 }
@@ -336,8 +351,10 @@ public class ItemListActivity extends AppCompatActivity {
                 String code = jsonObject.getString("code");
                 String r_item = jsonObject.getString("item");
                 result_item = r_item.split("#");
-                for(int a=0;a<result_item.length;a++)
+                for(int a=0;a<result_item.length;a++) {
                     Items.add(result_item[a]);
+               //     list.ListItems.add(result_item[a]);
+                }
                   Adapter.notifyDataSetChanged();
                 if (code.equals("200")) {
                     Toast.makeText(getApplicationContext(), r_item, Toast.LENGTH_SHORT).show();

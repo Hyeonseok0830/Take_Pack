@@ -130,29 +130,29 @@
         android:layout_height="wrap_content"
         >
     <Button
-        android:id="@+id/injoin"
+        android:id="@+id/cancel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_weight="0"
         android:layout_alignParentLeft="true"
-        android:text="가입하기"
-        android:onClick="submit"
+        android:text="취소"
+        android:onClick="cancel"
         />
         <!--android:onClick="join"-->
 <TextView
     android:layout_width="50dp"
     android:layout_height="0dp"
     android:id="@+id/yame"
-    android:layout_toRightOf="@id/injoin"
+    android:layout_toRightOf="@id/cancel"
     />
     <Button
-        android:id="@+id/cancel"
+        android:id="@+id/injoin"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_weight="0"
         android:layout_toRightOf="@id/yame"
-        android:text="취소"
-        android:onClick="cancel"
+        android:text="가입하기"
+        android:onClick="submit"
         />
     <!--android:onClick="login"-->
     </RelativeLayout>

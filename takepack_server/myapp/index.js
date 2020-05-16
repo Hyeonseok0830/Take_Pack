@@ -95,6 +95,7 @@ app.post('/user/login', function (req, res) {
         });
     })
 });
+
 app.post('/user/list', function (req, res) {
 
     console.log('listactivity 접속');
@@ -260,19 +261,20 @@ app.post('/user/add_marker', function (req, res) {
             } else {
                 resultCode = 200;
                 message = strArray[i] + '을 추가 하였습니다.';
-                console.log(message);
-                console.log(resultCode);
+              //  console.log(message);
+         //       console.log(resultCode);
             }
-            console.log(resultCode);
+       
 
         });
-        console.log(resultCode);
+       
     }
-    console.log(resultCode);
+ 
     res.json({
         'code': resultCode,
         'message': message
     });
+    console.log(resultCode + "  : " + message);
 
 });
 
