@@ -9,6 +9,8 @@ import android.app.FragmentManager;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.AsyncTask;
@@ -98,6 +100,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
 
+
     List<String> ListItems ;
     CharSequence[] items;
     @Override
@@ -123,7 +126,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 startActivity(intent);
             }
         });
-
 
     }
 
@@ -227,23 +229,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
     public void mapload()
     {
-
         new list_Post().execute("http://192.168.219.121:3000/user/list");
-
     }
     @Override
     public void onMapReady(final GoogleMap googleMap) {
-        mapload();
+
         googleMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
             @Override
-
-
             public void onMapLongClick(final LatLng point) {
-
+                mapload();
                 //Itemlistactivity
-
-
-
                 c_location = new LatLng(point.latitude,point.longitude); //커스텀 위치
                 add_lat=point.latitude;
                 add_lng=point.longitude;
@@ -266,11 +261,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                 final List SelectedItems  = new ArrayList();
                 final EditText edittext = new EditText(MainActivity.this);
-
+                System.out.println("리스트1");
                 edittext.setHint("정보입력");
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                 builder.setTitle("정보입력");
                 builder.setView(edittext);
+                System.out.println("리스트2");
                 builder.setMultiChoiceItems(items, null,
                         new DialogInterface.OnMultiChoiceClickListener() {
                             @Override
@@ -285,6 +281,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 }
                             }
                         });
+                System.out.println("리스트3");
                 builder.setPositiveButton("Ok",
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
@@ -294,7 +291,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                     int index = (int) SelectedItems.get(i);
                                     msg=msg+"\n"+(i+1)+" : " +ListItems.get(index);
                                     temp+=ListItems.get(index)+",";
-
 
                                 }
 
@@ -323,7 +319,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             }
                         });
                 builder.show();
-
+                System.out.println("리스트4");
           }
 
         });
@@ -398,6 +394,94 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 16));
 
 
+    }
+    public class list_Post extends AsyncTask<String, String, String> {
+        @Override
+        protected String doInBackground(String... urls) {
+            try {
+                //JSONObject를 만들고 key value 형식으로 값을 저장해준다.
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("id", user_id);
+//                jsonObject.put("pw", pw.getText().toString());
+
+
+                HttpURLConnection con = null;
+                BufferedReader reader = null;
+
+                try {
+                    //URL url = new URL("http://192.168.25.16:3000/users");
+                    URL url = new URL(urls[0]);
+                    //연결을 함
+                    con = (HttpURLConnection) url.openConnection();
+                    con.setRequestMethod("POST");//POST방식으로 보냄
+                    con.setRequestProperty("Cache-Control", "no-cache");//캐시 설정
+                    con.setRequestProperty("Content-Type", "application/json");//application JSON 형식으로 전송
+                    con.setRequestProperty("Accept", "text/html");//서버에 response 데이터를 html로 받음
+                    con.setDoOutput(true);//Outstream으로 post 데이터를 넘겨주겠다는 의미
+                    con.setDoInput(true);//Inputstream으로 서버로부터 응답을 받겠다는 의미
+                    con.connect();
+
+                    //서버로 보내기위해서 스트림 만듬
+                    OutputStream outStream = con.getOutputStream();
+                    //버퍼를 생성하고 넣음
+                    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outStream));
+                    writer.write(jsonObject.toString());
+                    writer.flush();
+                    writer.close();//버퍼를 받아줌
+
+                    //서버로 부터 데이터를 받음
+                    InputStream stream = con.getInputStream();
+                    reader = new BufferedReader(new InputStreamReader(stream));
+                    StringBuffer buffer = new StringBuffer();
+                    String line = "";
+                    while ((line = reader.readLine()) != null) {
+                        buffer.append(line);
+                    }
+                    return buffer.toString();//서버로 부터 받은 값을 리턴해줌 아마 OK!!가 들어올것임
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    if (con != null) {
+                        con.disconnect();
+                    }
+                    try {
+                        if (reader != null) {
+                            reader.close();//버퍼를 닫아줌
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        protected void onPostExecute(String result) {
+//          Log.d("reslut",result);
+            //    String x = result.substring(result.indexOf(":")+1,result.indexOf(","));
+            try {
+                JSONObject jsonObject = new JSONObject(result);
+                String code = jsonObject.getString("code");
+                String r_item = jsonObject.getString("item");
+                result_items = r_item.split("#");
+                for(int a=0;a<result_items.length;a++) {
+                    System.out.println("ListItems에 "+ result_items[a]+" 를 넣음");
+                    ListItems.add(result_items[a]);
+                }
+//                Adapter.notifyDataSetChanged();
+                if (code.equals("200")) {
+                    Toast.makeText(getApplicationContext(), r_item, Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getApplicationContext(), "실패", Toast.LENGTH_SHORT).show();
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
     }
     public class add_Maker_Post extends AsyncTask<String, String, String> {
         @Override
@@ -487,92 +571,5 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    public class list_Post extends AsyncTask<String, String, String> {
-        @Override
-        protected String doInBackground(String... urls) {
-            try {
-                //JSONObject를 만들고 key value 형식으로 값을 저장해준다.
-                JSONObject jsonObject = new JSONObject();
-                jsonObject.put("id", user_id);
-//                jsonObject.put("pw", pw.getText().toString());
 
-
-                HttpURLConnection con = null;
-                BufferedReader reader = null;
-
-                try {
-                    //URL url = new URL("http://192.168.25.16:3000/users");
-                    URL url = new URL(urls[0]);
-                    //연결을 함
-                    con = (HttpURLConnection) url.openConnection();
-                    con.setRequestMethod("POST");//POST방식으로 보냄
-                    con.setRequestProperty("Cache-Control", "no-cache");//캐시 설정
-                    con.setRequestProperty("Content-Type", "application/json");//application JSON 형식으로 전송
-                    con.setRequestProperty("Accept", "text/html");//서버에 response 데이터를 html로 받음
-                    con.setDoOutput(true);//Outstream으로 post 데이터를 넘겨주겠다는 의미
-                    con.setDoInput(true);//Inputstream으로 서버로부터 응답을 받겠다는 의미
-                    con.connect();
-
-                    //서버로 보내기위해서 스트림 만듬
-                    OutputStream outStream = con.getOutputStream();
-                    //버퍼를 생성하고 넣음
-                    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outStream));
-                    writer.write(jsonObject.toString());
-                    writer.flush();
-                    writer.close();//버퍼를 받아줌
-
-                    //서버로 부터 데이터를 받음
-                    InputStream stream = con.getInputStream();
-                    reader = new BufferedReader(new InputStreamReader(stream));
-                    StringBuffer buffer = new StringBuffer();
-                    String line = "";
-                    while ((line = reader.readLine()) != null) {
-                        buffer.append(line);
-                    }
-                    return buffer.toString();//서버로 부터 받은 값을 리턴해줌 아마 OK!!가 들어올것임
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } finally {
-                    if (con != null) {
-                        con.disconnect();
-                    }
-                    try {
-                        if (reader != null) {
-                            reader.close();//버퍼를 닫아줌
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-
-        protected void onPostExecute(String result) {
-//          Log.d("reslut",result);
-            //    String x = result.substring(result.indexOf(":")+1,result.indexOf(","));
-            try {
-                JSONObject jsonObject = new JSONObject(result);
-                String code = jsonObject.getString("code");
-                String r_item = jsonObject.getString("item");
-                result_items = r_item.split("#");
-                for(int a=0;a<result_items.length;a++) {
-                    System.out.println("ListItems에 "+ result_items[a]+" 를 넣음");
-                    ListItems.add(result_items[a]);
-                }
-//                Adapter.notifyDataSetChanged();
-                if (code.equals("200")) {
-                    Toast.makeText(getApplicationContext(), r_item, Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(getApplicationContext(), "실패", Toast.LENGTH_SHORT).show();
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-    }
 }

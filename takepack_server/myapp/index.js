@@ -266,8 +266,8 @@ app.post('/user/add_marker', function (req, res) {
             }
        
 
-        });
-       
+        });        
+        
     }
  
     res.json({
