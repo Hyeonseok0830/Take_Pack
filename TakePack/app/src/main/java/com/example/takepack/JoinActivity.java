@@ -56,7 +56,7 @@ public class JoinActivity extends AppCompatActivity {
 
     public void submit(View view) {
         if (pw.getText().toString().equals(pwc.getText().toString())) {
-            new Post().execute("http://192.168.219.121:3000/user/join");
+            new Post().execute("http://192.168.219.121:3000/join");
             finish();
         } else Toast.makeText(JoinActivity.this, "비밀번호를 확인해주세요.", Toast.LENGTH_LONG).show();
     }

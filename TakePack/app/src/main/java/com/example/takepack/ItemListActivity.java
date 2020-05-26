@@ -1,6 +1,7 @@
 package com.example.takepack;
 
 
+import android.content.ClipData;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -26,6 +27,8 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class ItemListActivity extends AppCompatActivity {
 
@@ -41,13 +44,15 @@ public class ItemListActivity extends AppCompatActivity {
     String item_name;
     String del_item;
     ArrayList Items;
+    List<String> ItemList;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_itemlist);
         Intent i = getIntent();
         user_id = i.getExtras().getString("user_id");
-        new Item_Post().execute("http://192.168.219.121:3000/user/list");
+        new Item_Post().execute("http://192.168.219.121:3000/list");
 
 
         list = new MainActivity();
@@ -70,7 +75,7 @@ public class ItemListActivity extends AppCompatActivity {
         btnAdd.setOnClickListener(listener);
         btnDel.setOnClickListener(listener);
 
-
+        ItemList= new ArrayList<>();
 
 
     }
@@ -78,9 +83,26 @@ public class ItemListActivity extends AppCompatActivity {
     public void onBackPressed() {
 
         super.onBackPressed();
-        Toast.makeText(getApplicationContext(), "뒤로가기 버튼 누름!.", Toast.LENGTH_SHORT).show();
-    //    list.recreate();
 
+        System.out.println("뒤로가기 버튼 누름");
+        Intent intentHome = new Intent(this, MainActivity.class);
+        intentHome.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intentHome.putExtra("uid",user_id);
+        startActivity(intentHome);
+
+
+
+//        new Item_Post().execute("http://192.168.219.121:3000/list");
+//
+//        for(int i=0;i<result_item.length;i++)
+//        {
+//            if(!ItemList.contains(result_item[i]))
+//                ItemList.add(result_item[i]);
+//        }
+//        if(list.ListItems.size()!=ItemList.size())
+//            System.out.println("TLqkf");
+//        list.ListItems=ItemList;
+//        System.out.println("리스트 -> Main 리스트 복사"+list.ListItems.get(1));
     }
 
 
@@ -94,11 +116,12 @@ public class ItemListActivity extends AppCompatActivity {
                     item_name = editText.getText().toString();
                     if (item_name.length() != 0) {
                         Items.add(item_name);
+
                         editText.setText("");
 
                         Adapter.notifyDataSetChanged();
 
-                        new add_Item_Post().execute("http://192.168.219.121:3000/user/add_item");
+                        new add_Item_Post().execute("http://192.168.219.121:3000/add_item");
                     }
                     break;
                 case R.id.btnDel:
@@ -108,7 +131,7 @@ public class ItemListActivity extends AppCompatActivity {
                     if (pos != ListView.INVALID_POSITION) {
                         del_item=Adapter.getItem(pos);
                         Toast.makeText(getApplicationContext(), del_item, Toast.LENGTH_SHORT).show();
-                        new del_Item_Post().execute("http://192.168.219.121:3000/user/del_item");
+                        new del_Item_Post().execute("http://192.168.219.121:3000/del_item");
                         Items.remove(pos);
                         listView.clearChoices();
                         Adapter.notifyDataSetChanged();
@@ -352,8 +375,11 @@ public class ItemListActivity extends AppCompatActivity {
                 String r_item = jsonObject.getString("item");
                 result_item = r_item.split("#");
                 for(int a=0;a<result_item.length;a++) {
-                    Items.add(result_item[a]);
-               //     list.ListItems.add(result_item[a]);
+                    {
+                        if(!Items.contains(result_item[a]))
+                            Items.add(result_item[a]);
+                        //     list.ListItems.add(result_item[a]);
+                    }
                 }
                   Adapter.notifyDataSetChanged();
                 if (code.equals("200")) {
@@ -366,4 +392,5 @@ public class ItemListActivity extends AppCompatActivity {
             }
         }
     }
+
 }

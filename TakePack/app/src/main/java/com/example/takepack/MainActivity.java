@@ -101,13 +101,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
 
-    List<String> ListItems ;
+    public List<String> ListItems ;
     CharSequence[] items;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Intent Mintent = getIntent();
         user_id= Mintent.getExtras().getString("uid");
-        new init_Maker_Post().execute("http://192.168.219.121:3000/user/marker");
+        new init_Marker_Post().execute("http://192.168.219.121:3000/marker");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -123,13 +123,183 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void onClick(View v) {
                 Intent intent = new Intent(getApplicationContext(), ItemListActivity.class);
                 intent.putExtra("user_id",user_id);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 startActivity(intent);
+                finish();
             }
         });
 
     }
 
-    public class init_Maker_Post extends AsyncTask<String, String, String> {
+
+    public void mapload()
+    {
+        new list_Post().execute("http://192.168.219.121:3000/list");
+    }
+    @Override
+    public void onMapReady(final GoogleMap googleMap) {
+        mapload();
+        googleMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
+            @Override
+            public void onMapLongClick(final LatLng point) {
+                mapload();
+
+                c_location = new LatLng(point.latitude,point.longitude); //커스텀 위치
+                add_lat=point.latitude;
+                add_lng=point.longitude;
+                final MarkerOptions mop = new MarkerOptions();
+
+//102라인 문제 있음
+//list가 ItemListActivity에서 생성되는데 ItemListActivity열기 전 롱 클릭하면 오류
+                //if(testitem.size()>0){
+//                for(int i=0;i<testitem.size();i++) {
+//                    ListItems.add(testitem.get(i));
+//                    }
+                //}
+
+              //  ItemListActivity listActivity = new ItemListActivity();
+             //   ListItems=listActivity.ListItem;
+                items = ListItems.toArray(new String[ ListItems.size()]);
+                //listActivity.ListItem; List형식의 ItemListActivity 의 List
+                if(ListItems.size()==0)
+                    System.out.println("리스트 비어있음");
+
+                final List SelectedItems  = new ArrayList();
+                final EditText edittext = new EditText(MainActivity.this);
+                System.out.println("리스트1");
+                edittext.setHint("정보입력");
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setTitle("정보입력");
+                builder.setView(edittext);
+                System.out.println("리스트2");
+                builder.setMultiChoiceItems(items, null,
+                        new DialogInterface.OnMultiChoiceClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which,
+                                                boolean isChecked) {
+                                if (isChecked) {
+                                    //사용자가 체크한 경우 리스트에 추가
+                                    SelectedItems.add(which);
+                                } else if (SelectedItems.contains(which)) {
+                                    //이미 리스트에 들어있던 아이템이면 제거
+                                    SelectedItems.remove(Integer.valueOf(which));
+                                }
+                            }
+                        });
+                System.out.println("리스트3");
+                builder.setPositiveButton("Ok",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                String msg="";
+                                String temp="";
+                                for (int i = 0; i < SelectedItems.size(); i++) {
+                                    int index = (int) SelectedItems.get(i);
+                                    msg=msg+"\n"+(i+1)+" : " +ListItems.get(index);
+                                    temp+=ListItems.get(index)+",";
+
+                                }
+
+                                mop.title(edittext.getText().toString());
+                                temp = temp.substring(0,temp.length()-1);
+                                mop.snippet(temp);
+                                mop.position(c_location);
+                                googleMap.addMarker(mop);
+                                add_name=edittext.getText().toString();
+                                insert_count = SelectedItems.size();
+                                add_item_list = temp;//nodejs에서 split후 string[] 에 담아 insert사용
+
+//                                Log.d("temp값",temp);
+                                Toast.makeText(getApplicationContext(),
+                                        "Total "+ SelectedItems.size() +" Items Selected.\n"+ msg , Toast.LENGTH_LONG)
+                                        .show();
+                                new add_Maker_Post().execute("http://192.168.219.121:3000/add_marker");
+
+                            }
+                        });
+                builder.setNegativeButton("Cancel",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+
+                                dialog.dismiss();
+                            }
+                        });
+                builder.show();
+                System.out.println("리스트4");
+          }
+
+        });
+        LinkedHashMap hash = new LinkedHashMap<String,String>();
+
+        ArrayList <Pair<Double, Double>> pairs = new ArrayList<>();
+        ArrayList <Pair<String,String>> p = new ArrayList<>();
+        for(int i=0;i<getitem_count;i++)
+        {
+            if(hash.containsKey(location_name[i]))//장소이름이 중복될 경우
+            {
+                item_temp += item_name[i] + ",";
+                hash.put(location_name[i], item_temp);
+            }
+            else//새로운 장소를 추가하는 경우
+            {
+                item_temp="";
+                item_temp += item_name[i] + ",";
+                hash.put(location_name[i], item_temp);
+                pairs.add(new Pair<>(lat[i],lng[i]));
+
+            }
+        }
+        MarkerOptions m = new MarkerOptions();
+        Set<Map.Entry<String, String>> entries = hash.entrySet();
+        int x=0;
+        for (Map.Entry<String, String> entry : entries) {
+            System.out.print("key: "+ entry.getKey());
+            System.out.println(", Value: "+ entry.getValue());
+
+            m.title(entry.getKey())
+                    .snippet(entry.getValue().substring(0,entry.getValue().length()-1))
+            .position(new LatLng(pairs.get(x).first,pairs.get(x).second));
+            googleMap.addMarker(m);
+            x++;
+
+        }
+
+
+  //  int getitem_count;
+        //    String[] location_name;
+        //    String[] item_name;
+        //    double[] lat;
+        //    double[] lng;
+        // 디비에서 받아오는 거 까지 완료 하였으니 받아온 내용을 바탕으로 마커 추가하는 작업 필요
+//        for(int i=0;i<getitem_count;i++)
+//        {
+//            MarkerOptions mop = new MarkerOptions();
+//            if(test!=location_name[i]) {
+//                if(test!="")
+//                {
+//                    googleMap.addMarker(mop);
+//                }
+//                item_snippet="";
+//                test=location_name[i];
+//                mop.title(location_name[i]);
+//                mop.position(new LatLng(lat[i], lng[i]));
+//                item_snippet+=item_name[i]+",";
+//            }
+//            else
+//            {
+//                item_snippet+=item_name[i]+",";
+//            }
+//        }
+        LatLng location = new LatLng(35.229688, 128.577900); //현재 내 위치
+        MarkerOptions markerOptions = new MarkerOptions();
+//        markerOptions.title("우리집");
+//        markerOptions.snippet("스니펫");
+        markerOptions.position(location);
+       // googleMap.addMarker(markerOptions);
+        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 16));
+
+
+    }
+    public class init_Marker_Post extends AsyncTask<String, String, String> {
         @Override
         protected String doInBackground(String... urls) {
             try {
@@ -204,9 +374,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 getitem_count=getitem.length();
 
                 location_name = new String[getitem_count];
-                item_name = new String[getitem_count]; //decription 저장용
-                lat = new double[getitem_count]; //link 저장용
-                lng = new double[getitem_count]; //imageUrl 저장용
+                item_name = new String[getitem_count];
+                lat = new double[getitem_count];
+                lng = new double[getitem_count];
                 for(int i=0;i<getitem_count;i++)
                 {
                     JSONObject itemobject = getitem.getJSONObject(i);
@@ -226,174 +396,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 e.printStackTrace();
             }
         }
-    }
-    public void mapload()
-    {
-        new list_Post().execute("http://192.168.219.121:3000/user/list");
-    }
-    @Override
-    public void onMapReady(final GoogleMap googleMap) {
-
-        googleMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
-            @Override
-            public void onMapLongClick(final LatLng point) {
-                mapload();
-                //Itemlistactivity
-                c_location = new LatLng(point.latitude,point.longitude); //커스텀 위치
-                add_lat=point.latitude;
-                add_lng=point.longitude;
-                final MarkerOptions mop = new MarkerOptions();
-
-//102라인 문제 있음
-//list가 ItemListActivity에서 생성되는데 ItemListActivity열기 전 롱 클릭하면 오류
-                //if(testitem.size()>0){
-//                for(int i=0;i<testitem.size();i++) {
-//                    ListItems.add(testitem.get(i));
-//                    }
-                //}
-
-              //  ItemListActivity listActivity = new ItemListActivity();
-             //   ListItems=listActivity.ListItem;
-                items = ListItems.toArray(new String[ ListItems.size()]);
-                //listActivity.ListItem; List형식의 ItemListActivity 의 List
-                if(ListItems.size()==0)
-                    System.out.println("리스트 비어있음");
-
-                final List SelectedItems  = new ArrayList();
-                final EditText edittext = new EditText(MainActivity.this);
-                System.out.println("리스트1");
-                edittext.setHint("정보입력");
-                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                builder.setTitle("정보입력");
-                builder.setView(edittext);
-                System.out.println("리스트2");
-                builder.setMultiChoiceItems(items, null,
-                        new DialogInterface.OnMultiChoiceClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which,
-                                                boolean isChecked) {
-                                if (isChecked) {
-                                    //사용자가 체크한 경우 리스트에 추가
-                                    SelectedItems.add(which);
-                                } else if (SelectedItems.contains(which)) {
-                                    //이미 리스트에 들어있던 아이템이면 제거
-                                    SelectedItems.remove(Integer.valueOf(which));
-                                }
-                            }
-                        });
-                System.out.println("리스트3");
-                builder.setPositiveButton("Ok",
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                String msg="";
-                                String temp="";
-                                for (int i = 0; i < SelectedItems.size(); i++) {
-                                    int index = (int) SelectedItems.get(i);
-                                    msg=msg+"\n"+(i+1)+" : " +ListItems.get(index);
-                                    temp+=ListItems.get(index)+",";
-
-                                }
-
-                                mop.title(edittext.getText().toString());
-                                temp = temp.substring(0,temp.length()-1);
-                                mop.snippet(temp);
-                                mop.position(c_location);
-                                googleMap.addMarker(mop);
-                                add_name=edittext.getText().toString();
-                                insert_count = SelectedItems.size();
-                                add_item_list = temp;//nodejs에서 split후 string[] 에 담아 insert사용
-
-//                                Log.d("temp값",temp);
-                                Toast.makeText(getApplicationContext(),
-                                        "Total "+ SelectedItems.size() +" Items Selected.\n"+ msg , Toast.LENGTH_LONG)
-                                        .show();
-                                new add_Maker_Post().execute("http://192.168.219.121:3000/user/add_marker");
-
-                            }
-                        });
-                builder.setNegativeButton("Cancel",
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-
-                                dialog.dismiss();
-                            }
-                        });
-                builder.show();
-                System.out.println("리스트4");
-          }
-
-        });
-        LinkedHashMap hash = new LinkedHashMap<String,String>();
-
-        ArrayList <Pair<Double, Double>> pairs = new ArrayList<>();
-        ArrayList <Pair<String,String>> p = new ArrayList<>();
-        for(int i=0;i<getitem_count;i++)
-        {
-            if(hash.containsKey(location_name[i]))//장소이름이 중복될 경우
-            {
-                item_temp += item_name[i] + ",";
-                hash.put(location_name[i], item_temp);
-            }
-            else//새로운 장소를 추가하는 경우
-            {
-                item_temp="";
-                item_temp += item_name[i] + ",";
-                hash.put(location_name[i], item_temp);
-                pairs.add(new Pair<>(lat[i],lng[i]));
-
-            }
-        }
-        MarkerOptions m = new MarkerOptions();
-        Set<Map.Entry<String, String>> entries = hash.entrySet();
-        int x=0;
-        for (Map.Entry<String, String> entry : entries) {
-
-            System.out.print("key: "+ entry.getKey());
-            System.out.println(", Value: "+ entry.getValue());
-
-            m.title(entry.getKey())
-                    .snippet(entry.getValue().substring(0,entry.getValue().length()-1))
-            .position(new LatLng(pairs.get(x).first,pairs.get(x).second));
-            googleMap.addMarker(m);
-            x++;
-
-        }
-
-
-  //  int getitem_count;
-        //    String[] location_name;
-        //    String[] item_name;
-        //    double[] lat;
-        //    double[] lng;
-        // 디비에서 받아오는 거 까지 완료 하였으니 받아온 내용을 바탕으로 마커 추가하는 작업 필요
-//        for(int i=0;i<getitem_count;i++)
-//        {
-//            MarkerOptions mop = new MarkerOptions();
-//            if(test!=location_name[i]) {
-//                if(test!="")
-//                {
-//                    googleMap.addMarker(mop);
-//                }
-//                item_snippet="";
-//                test=location_name[i];
-//                mop.title(location_name[i]);
-//                mop.position(new LatLng(lat[i], lng[i]));
-//                item_snippet+=item_name[i]+",";
-//            }
-//            else
-//            {
-//                item_snippet+=item_name[i]+",";
-//            }
-//        }
-        LatLng location = new LatLng(35.229688, 128.577900); //현재 내 위치
-        MarkerOptions markerOptions = new MarkerOptions();
-//        markerOptions.title("우리집");
-//        markerOptions.snippet("스니펫");
-        markerOptions.position(location);
-       // googleMap.addMarker(markerOptions);
-        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 16));
-
-
     }
     public class list_Post extends AsyncTask<String, String, String> {
         @Override
@@ -468,9 +470,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 String code = jsonObject.getString("code");
                 String r_item = jsonObject.getString("item");
                 result_items = r_item.split("#");
+                ListItems.clear();
+                System.out.println("리스트 포맷");
                 for(int a=0;a<result_items.length;a++) {
                     System.out.println("ListItems에 "+ result_items[a]+" 를 넣음");
-                    ListItems.add(result_items[a]);
+                    if(!ListItems.contains(result_items[a]))//삭제후 마커추가시 오류
+                        ListItems.add(result_items[a]);
                 }
 //                Adapter.notifyDataSetChanged();
                 if (code.equals("200")) {
