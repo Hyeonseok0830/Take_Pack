@@ -95,6 +95,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     String[] result_items;
 
+    LinkedHashMap hash;
+    ArrayList <Pair<Double, Double>> pairs;
 
     //list 부분
 
@@ -114,8 +116,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         fragmentManager=getFragmentManager();
         mapFragment = (MapFragment) fragmentManager.findFragmentById(R.id.googleMap);
         mapFragment.getMapAsync(this);
-
-
+        pairs = new ArrayList<>();
+        hash = new LinkedHashMap<String,String>();
         Button listmode = (Button) findViewById(R.id.listMode);
         ListItems = new ArrayList<>();
         listmode.setOnClickListener(new View.OnClickListener() {
@@ -228,10 +230,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
           }
 
         });
-        LinkedHashMap hash = new LinkedHashMap<String,String>();
 
-        ArrayList <Pair<Double, Double>> pairs = new ArrayList<>();
-        ArrayList <Pair<String,String>> p = new ArrayList<>();
+
+
+
+       // ArrayList <Pair<String,String>> p = new ArrayList<>();
+        pairs.clear();
+        hash.clear();
         for(int i=0;i<getitem_count;i++)
         {
             if(hash.containsKey(location_name[i]))//장소이름이 중복될 경우
@@ -249,9 +254,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         }
         MarkerOptions m = new MarkerOptions();
+
         Set<Map.Entry<String, String>> entries = hash.entrySet();
+        System.out.println("문제가 생기는 부분!!!!!!!!!!!!!!");
         int x=0;
         for (Map.Entry<String, String> entry : entries) {
+            //포문이 왜 안될까
             System.out.print("key: "+ entry.getKey());
             System.out.println(", Value: "+ entry.getValue());
 
