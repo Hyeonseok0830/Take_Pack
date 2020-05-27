@@ -82,11 +82,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     String user_id;
 
-    int getitem_count;
-    String[] location_name;
-    String[] item_name;
-    double[] lat;
-    double[] lng;
+    public int getitem_count;
+    public String[] location_name;
+    public String[] item_name;
+    public double[] lat;
+    public double[] lng;
     String location_temp="" ;
     String item_temp="" ;
     double lat_temp=0.0;
@@ -99,10 +99,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     ArrayList <Pair<Double, Double>> pairs;
 
     //list 부분
-
-
-
-
     public List<String> ListItems ;
     CharSequence[] items;
     @Override
@@ -138,13 +134,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     {
         new list_Post().execute("http://192.168.219.121:3000/list");
     }
+    public void mainload()
+    {
+        new init_Marker_Post().execute("http://192.168.219.121:3000/marker");
+    }
     @Override
     public void onMapReady(final GoogleMap googleMap) {
-        mapload();
+       // mainload();
         googleMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
             @Override
             public void onMapLongClick(final LatLng point) {
-                mapload();
+              //  mapload();
 
                 c_location = new LatLng(point.latitude,point.longitude); //커스텀 위치
                 add_lat=point.latitude;
@@ -168,12 +168,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                 final List SelectedItems  = new ArrayList();
                 final EditText edittext = new EditText(MainActivity.this);
-                System.out.println("리스트1");
+          //      System.out.println("리스트1");
                 edittext.setHint("정보입력");
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                 builder.setTitle("정보입력");
                 builder.setView(edittext);
-                System.out.println("리스트2");
+         //       System.out.println("리스트2");
                 builder.setMultiChoiceItems(items, null,
                         new DialogInterface.OnMultiChoiceClickListener() {
                             @Override
@@ -188,7 +188,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 }
                             }
                         });
-                System.out.println("리스트3");
+             //   System.out.println("리스트3");
                 builder.setPositiveButton("Ok",
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
@@ -226,7 +226,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             }
                         });
                 builder.show();
-                System.out.println("리스트4");
+             //   System.out.println("리스트4");
           }
 
         });
@@ -237,6 +237,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
        // ArrayList <Pair<String,String>> p = new ArrayList<>();
         pairs.clear();
         hash.clear();
+        if(getitem_count==0)
+            System.out.println("getitem_count이 0이다");
+        System.out.println("아아악!!이 먼저 실행되면 안됨");
         for(int i=0;i<getitem_count;i++)
         {
             if(hash.containsKey(location_name[i]))//장소이름이 중복될 경우
@@ -256,10 +259,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         MarkerOptions m = new MarkerOptions();
 
         Set<Map.Entry<String, String>> entries = hash.entrySet();
-        System.out.println("문제가 생기는 부분!!!!!!!!!!!!!!");
+
+
         int x=0;
+
+
         for (Map.Entry<String, String> entry : entries) {
             //포문이 왜 안될까
+            System.out.println("문제가 생기는 부분!!!!!!!!!!!!!!"+x);
             System.out.print("key: "+ entry.getKey());
             System.out.println(", Value: "+ entry.getValue());
 
@@ -379,6 +386,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 String msg = jsonObject.getString("message");
                 String itemlist = jsonObject.getString("item");
                 JSONArray getitem = new JSONArray(itemlist);
+
                 getitem_count=getitem.length();
 
                 location_name = new String[getitem_count];
@@ -393,10 +401,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     lat[i]=itemobject.getDouble("lat");
                     lng[i]=itemobject.getDouble("lng");
                     System.out.println(item_name[i]);
+                    System.out.println("아아아악!!!!!");
                 }
 
                 if (code.equals("200")) {
-                    Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "마커정보받아옴", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(getApplicationContext(), "실패", Toast.LENGTH_SHORT).show();
                 }
@@ -479,9 +488,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 String r_item = jsonObject.getString("item");
                 result_items = r_item.split("#");
                 ListItems.clear();
-                System.out.println("리스트 포맷");
+              //  System.out.println("리스트 포맷");
                 for(int a=0;a<result_items.length;a++) {
-                    System.out.println("ListItems에 "+ result_items[a]+" 를 넣음");
+                   // System.out.println("ListItems에 "+ result_items[a]+" 를 넣음");
                     if(!ListItems.contains(result_items[a]))//삭제후 마커추가시 오류
                         ListItems.add(result_items[a]);
                 }

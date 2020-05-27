@@ -13,6 +13,7 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -85,6 +86,7 @@ public class ItemListActivity extends AppCompatActivity {
         super.onBackPressed();
 
         System.out.println("뒤로가기 버튼 누름");
+
         Intent intentHome = new Intent(this, MainActivity.class);
         intentHome.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         intentHome.putExtra("uid",user_id);
@@ -383,7 +385,8 @@ public class ItemListActivity extends AppCompatActivity {
                 }
                   Adapter.notifyDataSetChanged();
                 if (code.equals("200")) {
-                    Toast.makeText(getApplicationContext(), r_item, Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(getApplicationContext(), r_item, Toast.LENGTH_SHORT).show();
+                    System.out.println("아이템리스트 엑티비티 성공적으로 열었음");
                 } else {
                     Toast.makeText(getApplicationContext(), "실패", Toast.LENGTH_SHORT).show();
                 }
@@ -392,5 +395,7 @@ public class ItemListActivity extends AppCompatActivity {
             }
         }
     }
+
+
 
 }
