@@ -12,7 +12,7 @@ var authData = {
 
 router.post('/', function (req, res) {
 
-    console.log('listactivity 접속');
+    console.log('Main 접속');
     console.log(req.body);
     var userid = req.body.id;
     var userpw = req.body.pw;

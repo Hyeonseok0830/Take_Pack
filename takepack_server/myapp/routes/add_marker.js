@@ -39,15 +39,15 @@ router.post('/', function (req, res) {
          //       console.log(resultCode);
             }
        
-
+          
         });        
-        
+        res.json({
+            'code': resultCode,
+            'message': message
+        });
     }
  
-    res.json({
-        'code': resultCode,
-        'message': message
-    });
+   
     console.log(resultCode + "  : " + message);
 
 });

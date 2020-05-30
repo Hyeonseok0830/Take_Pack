@@ -27,7 +27,7 @@ router.post('/', function (req, res) {
             }
             resultCode = '200';
         }
-        console.log(send + '전송 했음');
+       // console.log(send + '전송 했음');
         res.json({
             'code': resultCode,
             'item': send
