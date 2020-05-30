@@ -88,7 +88,7 @@ public class ItemListActivity extends AppCompatActivity {
         System.out.println("뒤로가기 버튼 누름");
 
         Intent intentHome = new Intent(this, MainActivity.class);
-        intentHome.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intentHome.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         intentHome.putExtra("uid",user_id);
         startActivity(intentHome);
 

@@ -1,41 +1,21 @@
 package com.example.takepack;
 
-import androidx.appcompat.app.AppCompatActivity;
-
-
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.app.FragmentManager;
-
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
-import android.util.Log;
 import android.util.Pair;
-import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.Adapter;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ListView;
-import android.widget.SimpleAdapter;
-import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.GoogleMapOptions;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
@@ -56,8 +36,6 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -105,7 +83,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onCreate(Bundle savedInstanceState) {
         Intent Mintent = getIntent();
         user_id= Mintent.getExtras().getString("uid");
-        new init_Marker_Post().execute("http://192.168.219.121:3000/marker");
+        new init_Marker_Post().execute("http://192.168.219.121:3000/marker?id="+user_id);
+        mapload();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -144,7 +123,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         googleMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
             @Override
             public void onMapLongClick(final LatLng point) {
-              //  mapload();
+                //mapload();
 
                 c_location = new LatLng(point.latitude,point.longitude); //커스텀 위치
                 add_lat=point.latitude;
@@ -235,11 +214,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
        // ArrayList <Pair<String,String>> p = new ArrayList<>();
-        pairs.clear();
-        hash.clear();
-        if(getitem_count==0)
+       // pairs.clear();
+      //  hash.clear();
+        if(getitem_count==0) {
             System.out.println("getitem_count이 0이다");
-        System.out.println("아아악!!이 먼저 실행되면 안됨");
+        //    mainload();
+            //   recreate();
+        }
+        System.out.println("아아악!!보다 먼저 실행되면 안됨");
         for(int i=0;i<getitem_count;i++)
         {
             if(hash.containsKey(location_name[i]))//장소이름이 중복될 경우
@@ -325,57 +307,58 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                 HttpURLConnection con = null;
                 BufferedReader reader = null;
-
                 try {
-                    //URL url = new URL("http://192.168.25.16:3000/users");
-                    URL url = new URL(urls[0]);
-                    //연결을 함
+                    URL url = new URL(urls[0]);//url을 가져온다.
+                    System.out.println(url);
                     con = (HttpURLConnection) url.openConnection();
-                    con.setRequestMethod("POST");//POST방식으로 보냄
-                    con.setRequestProperty("Cache-Control", "no-cache");//캐시 설정
-                    con.setRequestProperty("Content-Type", "application/json");//application JSON 형식으로 전송
-                    con.setRequestProperty("Accept", "text/html");//서버에 response 데이터를 html로 받음
-                    con.setDoOutput(true);//Outstream으로 post 데이터를 넘겨주겠다는 의미
-                    con.setDoInput(true);//Inputstream으로 서버로부터 응답을 받겠다는 의미
-                    con.connect();
-
-                    //서버로 보내기위해서 스트림 만듬
-                    OutputStream outStream = con.getOutputStream();
-                    //버퍼를 생성하고 넣음
-                    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outStream));
-                    writer.write(jsonObject.toString());
-                    writer.flush();
-                    writer.close();//버퍼를 받아줌
-
-                    //서버로 부터 데이터를 받음
+                    con.connect();//연결 수행
+                    //입력 스트림 생성
                     InputStream stream = con.getInputStream();
+
+                    //속도를 향상시키고 부하를 줄이기 위한 버퍼를 선언한다.
                     reader = new BufferedReader(new InputStreamReader(stream));
+
+                    //실제 데이터를 받는곳
                     StringBuffer buffer = new StringBuffer();
+
+                    //line별 스트링을 받기 위한 temp 변수
                     String line = "";
-                    while ((line = reader.readLine()) != null) {
+
+                    //아래라인은 실제 reader에서 데이터를 가져오는 부분이다. 즉 node.js서버로부터 데이터를 가져온다.
+                    while((line = reader.readLine()) != null){
                         buffer.append(line);
                     }
-                    return buffer.toString();//서버로 부터 받은 값을 리턴해줌 아마 OK!!가 들어올것임
-                } catch (MalformedURLException e) {
+
+                    //다 가져오면 String 형변환을 수행한다. 이유는 protected String doInBackground(String... urls) 니까
+                    return buffer.toString();
+
+                    //아래는 예외처리 부분이다.
+                } catch (MalformedURLException e){
                     e.printStackTrace();
                 } catch (IOException e) {
                     e.printStackTrace();
                 } finally {
-                    if (con != null) {
+                    //종료가 되면 disconnect메소드를 호출한다.
+                    if(con != null){
                         con.disconnect();
                     }
                     try {
-                        if (reader != null) {
-                            reader.close();//버퍼를 닫아줌
+                        //버퍼를 닫아준다.
+                        if(reader != null){
+                            reader.close();
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                }
+                }//finally 부분
             } catch (Exception e) {
                 e.printStackTrace();
             }
+
             return null;
+
+
+
         }
 
 

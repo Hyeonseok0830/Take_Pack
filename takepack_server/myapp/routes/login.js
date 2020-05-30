@@ -5,12 +5,27 @@ var mysql      = require('mysql');
 var dbconfig = require('../config/database.js');
 var connection = mysql.createConnection(dbconfig);
 
+var authData = {
+    id:'test',
+    pw:'1111'
+}
+
 router.post('/', function (req, res) {
 
     console.log('listactivity 접속');
     console.log(req.body);
     var userid = req.body.id;
     var userpw = req.body.pw;
+    // if(userid == authData.id&&userpw==authData.pw)
+    // {
+    //     session.is_logined=true;
+
+    //     console.log('Welcome');
+    // }
+    // else
+    // {
+    //     console.log('who?');
+    // }
     //  console.log(userid);
     var sql = 'select * from user where id =' + mysql.escape(userid);
 
