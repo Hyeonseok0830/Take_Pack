@@ -221,7 +221,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         //    mainload();
             //   recreate();
         }
-        System.out.println("아아악!!보다 먼저 실행되면 안됨");
+//.out.println("아아악!!보다 먼저 실행되면 안됨");
         for(int i=0;i<getitem_count;i++)
         {
             if(hash.containsKey(location_name[i]))//장소이름이 중복될 경우
@@ -248,7 +248,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         for (Map.Entry<String, String> entry : entries) {
             //포문이 왜 안될까
-            System.out.println("문제가 생기는 부분!!!!!!!!!!!!!!"+x);
+           // System.out.println("문제가 생기는 부분!!!!!!!!!!!!!!"+x);
             System.out.print("key: "+ entry.getKey());
             System.out.println(", Value: "+ entry.getValue());
 
@@ -384,7 +384,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     lat[i]=itemobject.getDouble("lat");
                     lng[i]=itemobject.getDouble("lng");
                     System.out.println(item_name[i]);
-                    System.out.println("아아아악!!!!!");
+              //      System.out.println("아아아악!!!!!");
                 }
 
                 if (code.equals("200")) {
@@ -563,8 +563,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 JSONObject jsonObject = new JSONObject(result);
                 String code = jsonObject.getString("code");
                 String msg = jsonObject.getString("message");
-
-
                 if (code.equals("200")) {
                     Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
                 } else {
