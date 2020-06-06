@@ -43,6 +43,8 @@ import java.util.Set;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
 
+    private GpsTracker gpsTracker;
+
     private FragmentManager fragmentManager;
     private MapFragment mapFragment;
     private String title="";
@@ -286,9 +288,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 //                item_snippet+=item_name[i]+",";
 //            }
 //        }
-        LatLng location = new LatLng(35.229688, 128.577900); //현재 내 위치
+        gpsTracker = new GpsTracker(MainActivity.this);
+
+        LatLng location = new LatLng(gpsTracker.getLatitude(), gpsTracker.getLongitude()); //현재 내 위치
         MarkerOptions markerOptions = new MarkerOptions();
-//        markerOptions.title("우리집");
+        markerOptions.title("현재위치");
 //        markerOptions.snippet("스니펫");
         markerOptions.position(location);
        // googleMap.addMarker(markerOptions);
