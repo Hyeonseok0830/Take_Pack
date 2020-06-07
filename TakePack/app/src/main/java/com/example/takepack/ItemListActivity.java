@@ -53,7 +53,7 @@ public class ItemListActivity extends AppCompatActivity {
         setContentView(R.layout.activity_itemlist);
         Intent i = getIntent();
         user_id = i.getExtras().getString("user_id");
-        new Item_Post().execute("http://192.168.219.121:3000/list");
+        new Item_Post().execute("http://192.168.219.101:3000/list");
 
 
         list = new MainActivity();
@@ -123,7 +123,7 @@ public class ItemListActivity extends AppCompatActivity {
 
                         Adapter.notifyDataSetChanged();
 
-                        new add_Item_Post().execute("http://192.168.219.121:3000/add_item");
+                        new add_Item_Post().execute("http://192.168.219.101:3000/add_item");
                     }
                     break;
                 case R.id.btnDel:
@@ -133,7 +133,7 @@ public class ItemListActivity extends AppCompatActivity {
                     if (pos != ListView.INVALID_POSITION) {
                         del_item=Adapter.getItem(pos);
                         Toast.makeText(getApplicationContext(), del_item, Toast.LENGTH_SHORT).show();
-                        new del_Item_Post().execute("http://192.168.219.121:3000/del_item");
+                        new del_Item_Post().execute("http://192.168.219.101:3000/del_item");
                         Items.remove(pos);
                         listView.clearChoices();
                         Adapter.notifyDataSetChanged();

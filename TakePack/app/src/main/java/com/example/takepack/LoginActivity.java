@@ -54,7 +54,7 @@ public class LoginActivity extends AppCompatActivity {
 
     public void login(View v) {
       //  Toast.makeText(getApplicationContext(), "로그인버튼눌렀따", Toast.LENGTH_SHORT).show();
-        new login_Post().execute("http://192.168.219.121:3000/login");
+        new login_Post().execute("http://192.168.219.101:3000/login");
 
 
     }

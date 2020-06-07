@@ -43,6 +43,8 @@ import java.util.Set;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
 
+    private GpsTracker gpsTracker;
+
     private FragmentManager fragmentManager;
     private MapFragment mapFragment;
     private String title="";
@@ -83,7 +85,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onCreate(Bundle savedInstanceState) {
         Intent Mintent = getIntent();
         user_id= Mintent.getExtras().getString("uid");
-        new init_Marker_Post().execute("http://192.168.219.121:3000/marker?id="+user_id);
+        new init_Marker_Post().execute("http://192.168.219.101:3000/marker?id="+user_id);
         mapload();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -111,11 +113,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     public void mapload()
     {
-        new list_Post().execute("http://192.168.219.121:3000/list");
+        new list_Post().execute("http://192.168.219.101:3000/list");
     }
     public void mainload()
     {
-        new init_Marker_Post().execute("http://192.168.219.121:3000/marker");
+        new init_Marker_Post().execute("http://192.168.219.101:3000/marker");
     }
     @Override
     public void onMapReady(final GoogleMap googleMap) {
@@ -193,7 +195,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 Toast.makeText(getApplicationContext(),
                                         "Total "+ SelectedItems.size() +" Items Selected.\n"+ msg , Toast.LENGTH_LONG)
                                         .show();
-                                new add_Maker_Post().execute("http://192.168.219.121:3000/add_marker");
+                                new add_Maker_Post().execute("http://192.168.219.101:3000/add_marker");
 
                             }
                         });
@@ -286,7 +288,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 //                item_snippet+=item_name[i]+",";
 //            }
 //        }
-        LatLng location = new LatLng(35.229688, 128.577900); //현재 내 위치
+        gpsTracker = new GpsTracker(MainActivity.this);
+
+        LatLng location = new LatLng(gpsTracker.getLatitude(), gpsTracker.getLongitude()); //현재 내 위치
         MarkerOptions markerOptions = new MarkerOptions();
 //        markerOptions.title("우리집");
 //        markerOptions.snippet("스니펫");

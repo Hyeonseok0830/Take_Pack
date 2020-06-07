@@ -36,7 +36,7 @@ app.use('/del_item',delitemRouer);
 app.use('/marker',markerRouter);
 app.use('/add_marker',addmarkerRouter);
 
-app.listen(3000, '192.168.219.121', function () {
+app.listen(3000, '192.168.219.101', function () {
     console.log('서버 실행 중...');
 });
 // var connection = mysql.createConnection({
