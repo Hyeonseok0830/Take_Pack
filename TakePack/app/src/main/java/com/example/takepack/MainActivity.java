@@ -4,6 +4,8 @@ import android.app.AlertDialog;
 import android.app.FragmentManager;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Pair;
@@ -18,6 +20,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
@@ -85,11 +88,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onCreate(Bundle savedInstanceState) {
         Intent Mintent = getIntent();
         user_id= Mintent.getExtras().getString("uid");
-        new init_Marker_Post().execute("http://192.168.219.121:3000/marker?id="+user_id);
+        new init_Marker_Post().execute("http://172.20.10.3:3000/marker?id="+user_id);
         mapload();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        gpsTracker = new GpsTracker(MainActivity.this);
         fragmentManager=getFragmentManager();
         mapFragment = (MapFragment) fragmentManager.findFragmentById(R.id.googleMap);
         mapFragment.getMapAsync(this);
@@ -113,11 +116,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     public void mapload()
     {
-        new list_Post().execute("http://192.168.219.121:3000/list");
+        new list_Post().execute("http://172.20.10.3:3000/list");
     }
     public void mainload()
     {
-        new init_Marker_Post().execute("http://192.168.219.121:3000/marker");
+        new init_Marker_Post().execute("http://172.20.10.3:3000/marker");
     }
     @Override
     public void onMapReady(final GoogleMap googleMap) {
@@ -127,7 +130,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void onMapLongClick(final LatLng point) {
                 //mapload();
 
-                c_location = new LatLng(point.latitude,point.longitude); //커스텀 위치
+                c_location = new LatLng(point.latitude,point.longitude); //
+                // 커스텀 위치
                 add_lat=point.latitude;
                 add_lng=point.longitude;
                 final MarkerOptions mop = new MarkerOptions();
@@ -186,6 +190,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 temp = temp.substring(0,temp.length()-1);
                                 mop.snippet(temp);
                                 mop.position(c_location);
+                                BitmapDrawable bitmapdraw=(BitmapDrawable)getResources().getDrawable(R.drawable.marker);
+                                Bitmap b=bitmapdraw.getBitmap();
+                                Bitmap smallMarker = Bitmap.createScaledBitmap(b, 200, 200, false);
+                                mop.icon(BitmapDescriptorFactory.fromBitmap(smallMarker));
                                 googleMap.addMarker(mop);
                                 add_name=edittext.getText().toString();
                                 insert_count = SelectedItems.size();
@@ -195,7 +203,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 Toast.makeText(getApplicationContext(),
                                         "Total "+ SelectedItems.size() +" Items Selected.\n"+ msg , Toast.LENGTH_LONG)
                                         .show();
-                                new add_Maker_Post().execute("http://192.168.219.121:3000/add_marker");
+                                new add_Maker_Post().execute("http://172.20.10.3:3000/add_marker");
 
                             }
                         });
@@ -288,10 +296,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 //                item_snippet+=item_name[i]+",";
 //            }
 //        }
-        gpsTracker = new GpsTracker(MainActivity.this);
 
-        LatLng location = new LatLng(gpsTracker.getLatitude(), gpsTracker.getLongitude()); //현재 내 위치
+
+        LatLng location = new LatLng(36.794446, 127.104305); //현재 내 위치
+
         MarkerOptions markerOptions = new MarkerOptions();
+
+        BitmapDrawable bitmapdraw=(BitmapDrawable)getResources().getDrawable(R.drawable.marker);
+        Bitmap b=bitmapdraw.getBitmap();
+        Bitmap smallMarker = Bitmap.createScaledBitmap(b, 200, 200, false);
+        markerOptions.icon(BitmapDescriptorFactory.fromBitmap(smallMarker));
+
         markerOptions.title("현재위치");
 //        markerOptions.snippet("스니펫");
         markerOptions.position(location);
@@ -394,6 +409,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 if (code.equals("200")) {
                     Toast.makeText(getApplicationContext(), "마커정보받아옴", Toast.LENGTH_SHORT).show();
                 } else {
+                    System.out.println("실패");
                     Toast.makeText(getApplicationContext(), "실패", Toast.LENGTH_SHORT).show();
                 }
             } catch (JSONException e) {
