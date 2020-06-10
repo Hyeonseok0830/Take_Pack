@@ -41,7 +41,6 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-
         id = (EditText) findViewById(R.id.eid);
         pw = (EditText) findViewById(R.id.epw);
     }
@@ -53,7 +52,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public void login(View v) {
-      //  Toast.makeText(getApplicationContext(), "로그인버튼눌렀따", Toast.LENGTH_SHORT).show();
+        //  Toast.makeText(getApplicationContext(), "로그인버튼눌렀따", Toast.LENGTH_SHORT).show();
         new login_Post().execute("http://192.168.219.101:3000/login");
 
 
@@ -131,25 +130,25 @@ public class LoginActivity extends AppCompatActivity {
 
             return null;
         }
+
         protected void onPostExecute(String result) {
 //          Log.d("reslut",result);
-      //    String x = result.substring(result.indexOf(":")+1,result.indexOf(","));
+            //    String x = result.substring(result.indexOf(":")+1,result.indexOf(","));
             try {
 
                 JSONObject jsonObject = new JSONObject(result);
-                String code= jsonObject.getString("code");
+                String code = jsonObject.getString("code");
                 String name = jsonObject.getString("message");
                 String user_id = jsonObject.getString("id");
 
-                if ( code.equals("200")){
-                    Toast.makeText(getApplicationContext(),name,Toast.LENGTH_SHORT).show();
+                if (code.equals("200")) {
+                    Toast.makeText(getApplicationContext(), name, Toast.LENGTH_SHORT).show();
                     Intent main_intent = new Intent(LoginActivity.this, MainActivity.class);
-                    main_intent.putExtra("uid",user_id);
+                    main_intent.putExtra("uid", user_id);
                     startActivity(main_intent);
                     finish();
-                }
-                else {
-                    Toast.makeText(getApplicationContext(),"로그인 실패",Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getApplicationContext(), "로그인 실패", Toast.LENGTH_SHORT).show();
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -169,11 +168,8 @@ public class LoginActivity extends AppCompatActivity {
         }
 
 
-
     }
 }
-
-
 
 
 //    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -186,8 +182,5 @@ public class LoginActivity extends AppCompatActivity {
 //        }
 //    }
 
-    // 안스에서 노드js로 데이터 보내는 부분
-
-
-
+// 안스에서 노드js로 데이터 보내는 부분
 

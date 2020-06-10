@@ -3,21 +3,23 @@
 var express = require('express');
 var app = express();
 var bodyParser = require('body-parser');
-const session = require('express-session');
+
+// var session = require('express-session');
+// var FileStore = require('session-file-store')(session)
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 
-app.use(session({
-  key: 'sid',
-  secret: 'secret',
-  resave: false,
-  saveUninitialized: true,
-  cookie: {
-    maxAge: 24000 * 60 * 60 // 쿠키 유효기간 24시간
-  }
-}));
+
+
+// app.use(session({
+//   secret: '!@#$%^&*',
+//   store: new MySQLStore(dbOptions),
+//   resave: false,
+//   saveUninitialized: false
+// }));
+
 
 
 var loginRouter = require('./routes/login');

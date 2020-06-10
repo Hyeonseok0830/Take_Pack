@@ -5,10 +5,13 @@ var mysql      = require('mysql');
 var dbconfig = require('../config/database.js');
 var connection = mysql.createConnection(dbconfig);
 
-var authData = {
-    id:'test',
-    pw:'1111'
-}
+
+
+// var authData = {
+//     id:'test',
+//     pw:'1111',
+//     email:'1'
+// }
 
 router.post('/', function (req, res) {
 
@@ -16,11 +19,12 @@ router.post('/', function (req, res) {
     console.log(req.body);
     var userid = req.body.id;
     var userpw = req.body.pw;
-    // if(userid == authData.id&&userpw==authData.pw)
-    // {
-    //     session.is_logined=true;
 
-    //     console.log('Welcome');
+    // if(userid === authData.id&&userpw==authData.pw)
+    // {
+    //    // session.is_logined=true;
+    //    req.session.is_logined = true;
+    //    req.session.email = authData.email;
     // }
     // else
     // {
