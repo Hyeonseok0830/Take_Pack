@@ -19,10 +19,15 @@ import androidx.core.app.ActivityCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.places.GeoDataClient;
+import com.google.android.gms.location.places.PlaceDetectionClient;
+import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
@@ -49,34 +54,35 @@ import java.util.Set;
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback {
 
    // private GpsTracker gpsTracker;
- //
+ //map 부분
     private FragmentManager fragmentManager;
     private MapFragment mapFragment;
     private String title="";
+    private GoogleMap mMap;
+    private CameraPosition mCameraPosition;
 
-    private MarkerOptions mop = new MarkerOptions();
-
-    private static final String TAG = "googlemap_example";
-    private static final int GPS_ENABLE_REQUEST_CODE = 2001;
-    private static final int UPDATE_INTERVAL_MS = 1000;  // 1초
-    private static final int FASTEST_UPDATE_INTERVAL_MS = 500; // 0.5초
-
-
-    // onRequestPermissionsResult에서 수신된 결과에서 ActivityCompat.requestPermissions를 사용한 퍼미션 요청을 구별하기 위해 사용됩니다.
-    private static final int PERMISSIONS_REQUEST_CODE = 100;
-    boolean needRequest = false;
-    String[] REQUIRED_PERMISSIONS  = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};  // 외부 저장소
-
-
-    Location mCurrentLocatiion;
-    LatLng currentPosition;
-
+    private GeoDataClient mGeoDataClient;
+    private PlaceDetectionClient mPlaceDetectionClient;
 
     private FusedLocationProviderClient mFusedLocationClient;
-    private LocationRequest locationRequest;
-    private Location location;
 
-    private View mLayout;
+    private final LatLng mDefaultLocation = new LatLng(35.229626, 128.578007);
+    private static final int DEFAULT_ZOOM=16;
+    private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION=1;
+    private boolean mLocationPermissionGranted;
+
+    private Location mLastKnownLocation;
+
+    private static final String KEY_CAMERA_POSITION = "camera_position";
+    private static final String KEY_LOCATION="location";
+
+    private static final int M_MAX_ENTRIES=5;
+    private String[] mLikelyPlaceNames;
+    private String[] mLikelyPlaceAddress;
+    private String[] getmLikelyPlaceAttribution;
+    private LatLng[] mLikelyPlaceLatLngs;
+
+    private MarkerOptions mop = new MarkerOptions();
 
     String add_name;
     int insert_count;
@@ -111,13 +117,23 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         Intent Mintent = getIntent();
         user_id= Mintent.getExtras().getString("uid");
         new init_Marker_Get().execute("http://192.168.219.101:3000/marker?id="+user_id);
-        mapload();
         super.onCreate(savedInstanceState);
+        if(savedInstanceState!=null)
+        {
+            mLastKnownLocation = savedInstanceState.getParcelable(KEY_LOCATION);
+            mCameraPosition = savedInstanceState.getParcelable(KEY_CAMERA_POSITION);
+        }
+        mapload();
         setContentView(R.layout.activity_main);
+
+        mGeoDataClient = Places.getGeoDataClient(this,null);
+        mPlaceDetectionClient = Places.getPlaceDetectionClient(this,null);
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         fragmentManager=getFragmentManager();
         mapFragment = (MapFragment) fragmentManager.findFragmentById(R.id.googleMap);
         mapFragment.getMapAsync(this);
+
         pairs = new ArrayList<>();
         hash = new LinkedHashMap<String,String>();
         Button listmode = (Button) findViewById(R.id.listMode);
