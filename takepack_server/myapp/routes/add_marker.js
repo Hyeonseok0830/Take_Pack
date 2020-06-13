@@ -23,8 +23,6 @@ router.post('/', function (req, res) {
         var sql = 'INSERT INTO marker (name, item, lat, lng, user_id) VALUES (?, ?, ?, ?, ?)';
         var rowVlaues = [add_name, strArray[i], add_lat, add_lng, userid];
         // var valueString = rowVlaues.join(",");
-        // values.push('['+valueString+']');
-        //console.log('야!' + values);
 
         // sql 문의 ?는 두번째 매개변수로 넘겨진 params의 값으로 치환된다.
         connection.query(sql, rowVlaues, function (err, result) {
@@ -35,21 +33,16 @@ router.post('/', function (req, res) {
             } else {
                 resultCode = 200;
                 message = strArray[i] + '을 추가 하였습니다.';
-              //  console.log(message);
-         //       console.log(resultCode);
+                console.log(message);
+                console.log(resultCode);
             }
-       
-          
-        });        
+        });
         res.json({
             'code': resultCode,
             'message': message
         });
     }
- 
    
-    console.log(resultCode + "  : " + message);
-
 });
 
 module.exports = router;

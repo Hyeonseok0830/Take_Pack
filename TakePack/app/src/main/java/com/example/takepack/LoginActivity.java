@@ -4,18 +4,12 @@ package com.example.takepack;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Debug;
-import android.util.Log;
 import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ListView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -36,6 +30,7 @@ public class LoginActivity extends AppCompatActivity {
 
     EditText id;
     EditText pw;
+    public String mip = "192.168.219.101:8888";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,7 +48,7 @@ public class LoginActivity extends AppCompatActivity {
 
     public void login(View v) {
         //  Toast.makeText(getApplicationContext(), "로그인버튼눌렀따", Toast.LENGTH_SHORT).show();
-        new login_Post().execute("http://192.168.219.101:3000/login");
+        new login_Post().execute("http://"+mip+"/login");
 
 
     }

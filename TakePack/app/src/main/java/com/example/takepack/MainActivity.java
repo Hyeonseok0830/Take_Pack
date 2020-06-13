@@ -3,38 +3,29 @@ package com.example.takepack;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.app.FragmentManager;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.location.Location;
 import android.location.LocationManager;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.Pair;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationListener;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.places.GeoDataClient;
-import com.google.android.gms.location.places.PlaceDetectionClient;
-import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
@@ -60,35 +51,14 @@ import java.util.Set;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback {
 
+    LoginActivity lg = new LoginActivity();
+    String m_ip = lg.mip;
     private GpsTracker gpsTracker;
     //map 부분
     private FragmentManager fragmentManager;
     private MapFragment mapFragment;
     private String title = "";
     private GoogleMap mMap;
-    //    private CameraPosition mCameraPosition;
-//
-//    private GeoDataClient mGeoDataClient;
-//    private PlaceDetectionClient mPlaceDetectionClient;
-//
-//    private FusedLocationProviderClient mFusedLocationClient;
-//
-//    private final LatLng mDefaultLocation = new LatLng(35.229626, 128.578007);
-//    private static final int DEFAULT_ZOOM=16;
-//    private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION=1;
-//    private boolean mLocationPermissionGranted;
-//
-//    private Location mLastKnownLocation;
-//
-//    private static final String KEY_CAMERA_POSITION = "camera_position";
-//    private static final String KEY_LOCATION="location";
-//
-//    private static final int M_MAX_ENTRIES=5;
-//    private String[] mLikelyPlaceNames;
-//    private String[] mLikelyPlaceAddress;
-//    private String[] getmLikelyPlaceAttribution;
-//    private LatLng[] mLikelyPlaceLatLngs;
-    private final int MY_PERMISSIONS_REQUEST_LOCATION = 1001;
 
 
     private MarkerOptions mop = new MarkerOptions();
@@ -123,126 +93,53 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     CharSequence[] items;
 
 
+    private LocationManager locationManager;
+    private static final int REQUEST_CODE_LOCATION = 2;
+    double clng,clat;
+
+/////////////////////////
+    private static final int GPS_ENABLE_REQUEST_CODE = 2001;
+    private static final int PERMISSIONS_REQUEST_CODE = 100;
+    String[] REQUIRED_PERMISSIONS  = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+
+
         Intent Mintent = getIntent();
         user_id = Mintent.getExtras().getString("uid");
-        new init_Marker_Get().execute("http://192.168.219.101:3000/marker?id=" + user_id);
+        new init_Marker_Get().execute("http://"+m_ip+"/marker?id=" + user_id);
         super.onCreate(savedInstanceState);
-        // Acquire a reference to the system Location Manager
-        LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 
-        // GPS 프로바이더 사용가능여부
-        boolean isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-        // 네트워크 프로바이더 사용가능여부
-        boolean isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+    //사용자의 현재 위치
 
-        Log.d("Main", "isGPSEnabled=" + isGPSEnabled);
-        Log.d("Main", "isNetworkEnabled=" + isNetworkEnabled);
-
-        LocationListener locationListener = new LocationListener() {
-            public void onLocationChanged(Location location) {
-                double lat = location.getLatitude();
-                double lng = location.getLongitude();
-                m_lat = lat;
-                m_lng = lng;
-                 Log.d("Main1", "longtitude=" + m_lng + ", latitude=" + m_lat);
-            }
-
-            public void onStatusChanged(String provider, int status, Bundle extras) {
-                //logView.setText("onStatusChanged");
-            }
-
-            public void onProviderEnabled(String provider) {
-                //logView.setText("onProviderEnabled");
-            }
-
-            public void onProviderDisabled(String provider) {
-                //  logView.setText("onProviderDisabled");
-            }
-        };
-
-        // Register the listener with the Location Manager to receive location updates
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, (android.location.LocationListener) locationListener);
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, (android.location.LocationListener) locationListener);
-
-        // 수동으로 위치 구하기
-        String locationProvider = LocationManager.GPS_PROVIDER;
-        Location lastKnownLocation = locationManager.getLastKnownLocation(locationProvider);
-        if (lastKnownLocation != null) {
-            double lng = lastKnownLocation.getLatitude();
-            double lat = lastKnownLocation.getLatitude();
-            m_lng = lng;
-            m_lat = lat;
-            Log.d("Main2", "longtitude=" + lng + ", latitude=" + lat);
-        }
-//        int permssionCheck = ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_FINE_LOCATION);
-//
-//
-//        if (permssionCheck!= PackageManager.PERMISSION_GRANTED) {
-//
-//            Toast.makeText(this,"권한 승인이 필요합니다",Toast.LENGTH_LONG).show();
-//
-//            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-//                    Manifest.permission.ACCESS_FINE_LOCATION)) {
-//                Toast.makeText(this,"000부분 사용을 위해 카메라 권한이 필요합니다.",Toast.LENGTH_LONG).show();
-//            } else {
-//                ActivityCompat.requestPermissions(this,
-//                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-//                        MY_PERMISSIONS_REQUEST_LOCATION);
-//                Toast.makeText(this,"000부분 사용을 위해 카메라 권한이 필요합니다.",Toast.LENGTH_LONG).show();
-//
-//            }
-//        }
-
-//        final LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-//
-//        if ( Build.VERSION.SDK_INT >= 23 &&
-//                ContextCompat.checkSelfPermission( getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION ) != PackageManager.PERMISSION_GRANTED ) {
-//            ActivityCompat.requestPermissions( MainActivity.this, new String[] {  android.Manifest.permission.ACCESS_FINE_LOCATION  },
-//                    0 );
-//        }
-//        else{
-//            Location location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-//            String provider = location.getProvider();
-//            double latitude = location.getLatitude();
-//            double longitude = location.getLongitude();
-//            double altitude = location.getAltitude();
-//            m_lat = latitude;
-//            m_lng = longitude;
-//            System.out.println(m_lat + " , " + m_lng);
-//            lm.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-//                    1000,
-//                    1,
-//                    (android.location.LocationListener) gpsLocationListener);
-//            lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
-//                    1000,
-//                    1,
-//                    (android.location.LocationListener) gpsLocationListener);
-//        }
-
-
-//        if(savedInstanceState!=null)
-//        {
-//            mLastKnownLocation = savedInstanceState.getParcelable(KEY_LOCATION);
-//            mCameraPosition = savedInstanceState.getParcelable(KEY_CAMERA_POSITION);
-//        }
         mapload();
         setContentView(R.layout.activity_main);
+        if (!checkLocationServicesStatus()) {
 
-//        mGeoDataClient = Places.getGeoDataClient(this,null);
-//        mPlaceDetectionClient = Places.getPlaceDetectionClient(this,null);
-//        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+            showDialogForLocationServiceSetting();
+        }else {
+
+            checkRunTimePermission();
+        }
+
+        gpsTracker = new GpsTracker(MainActivity.this);
+
+        double latitude = gpsTracker.getLatitude();
+        double longitude = gpsTracker.getLongitude();
+        clat = latitude;
+        clng = longitude;
+        //String address = getCurrentAddress(latitude, longitude);
+        // textview_address.setText(address);
+
+        Toast.makeText(MainActivity.this, "현재위치 \n위도 " + latitude + "\n경도 " + longitude, Toast.LENGTH_LONG).show();
+
+        final TextView textview_address = (TextView)findViewById(R.id.state);
+
+
 
         fragmentManager=getFragmentManager();
         mapFragment = (MapFragment) fragmentManager.findFragmentById(R.id.googleMap);
@@ -264,54 +161,160 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
 
     }
-//    final LocationListener gpsLocationListener = new LocationListener() {
-//        public void onLocationChanged(Location location) {
-//
-//            String provider = location.getProvider();
-//            double longitude = location.getLongitude();
-//            double latitude = location.getLatitude();
-//            double altitude = location.getAltitude();
-//
-//        }
-//
-//        public void onStatusChanged(String provider, int status, Bundle extras) {
-//        }
-//
-//        public void onProviderEnabled(String provider) {
-//        }
-//
-//        public void onProviderDisabled(String provider) {
-//        }
-//    };
+    @Override
+    public void onRequestPermissionsResult(int permsRequestCode,
+                                           @NonNull String[] permissions,
+                                           @NonNull int[] grandResults) {
+
+        if ( permsRequestCode == PERMISSIONS_REQUEST_CODE && grandResults.length == REQUIRED_PERMISSIONS.length) {
+
+            // 요청 코드가 PERMISSIONS_REQUEST_CODE 이고, 요청한 퍼미션 개수만큼 수신되었다면
+
+            boolean check_result = true;
 
 
-//    @Override
-//    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults){
-//        switch (requestCode) {
-//            case MY_PERMISSIONS_REQUEST_LOCATION: {
-//                // If request is cancelled, the result arrays are empty.
-//                if (grantResults.length > 0
-//                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-//
-//                    Toast.makeText(this, "승인이 허가되어 있습니다.", Toast.LENGTH_LONG).show();
-//
-//                } else {
-//                    Toast.makeText(this, "아직 승인받지 않았습니다.", Toast.LENGTH_LONG).show();
-//                }
-//                return;
-//            }
-//
-//        }
-//
-//    }
+            // 모든 퍼미션을 허용했는지 체크합니다.
+
+            for (int result : grandResults) {
+                if (result != PackageManager.PERMISSION_GRANTED) {
+                    check_result = false;
+                    break;
+                }
+            }
+
+
+            if ( check_result ) {
+
+                //위치 값을 가져올 수 있음
+                ;
+            }
+            else {
+                // 거부한 퍼미션이 있다면 앱을 사용할 수 없는 이유를 설명해주고 앱을 종료합니다.2 가지 경우가 있습니다.
+
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this, REQUIRED_PERMISSIONS[0])
+                        || ActivityCompat.shouldShowRequestPermissionRationale(this, REQUIRED_PERMISSIONS[1])) {
+
+                    Toast.makeText(MainActivity.this, "퍼미션이 거부되었습니다. 앱을 다시 실행하여 퍼미션을 허용해주세요.", Toast.LENGTH_LONG).show();
+                    finish();
+
+
+                }else {
+
+                    Toast.makeText(MainActivity.this, "퍼미션이 거부되었습니다. 설정(앱 정보)에서 퍼미션을 허용해야 합니다. ", Toast.LENGTH_LONG).show();
+
+                }
+            }
+
+        }
+    }
+
+    void checkRunTimePermission(){
+
+        //런타임 퍼미션 처리
+        // 1. 위치 퍼미션을 가지고 있는지 체크합니다.
+        int hasFineLocationPermission = ContextCompat.checkSelfPermission(MainActivity.this,
+                Manifest.permission.ACCESS_FINE_LOCATION);
+        int hasCoarseLocationPermission = ContextCompat.checkSelfPermission(MainActivity.this,
+                Manifest.permission.ACCESS_COARSE_LOCATION);
+
+
+        if (hasFineLocationPermission == PackageManager.PERMISSION_GRANTED &&
+                hasCoarseLocationPermission == PackageManager.PERMISSION_GRANTED) {
+
+            // 2. 이미 퍼미션을 가지고 있다면
+            // ( 안드로이드 6.0 이하 버전은 런타임 퍼미션이 필요없기 때문에 이미 허용된 걸로 인식합니다.)
+
+
+            // 3.  위치 값을 가져올 수 있음
+
+
+
+        } else {  //2. 퍼미션 요청을 허용한 적이 없다면 퍼미션 요청이 필요합니다. 2가지 경우(3-1, 4-1)가 있습니다.
+
+            // 3-1. 사용자가 퍼미션 거부를 한 적이 있는 경우에는
+            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this, REQUIRED_PERMISSIONS[0])) {
+
+                // 3-2. 요청을 진행하기 전에 사용자가에게 퍼미션이 필요한 이유를 설명해줄 필요가 있습니다.
+                Toast.makeText(MainActivity.this, "이 앱을 실행하려면 위치 접근 권한이 필요합니다.", Toast.LENGTH_LONG).show();
+                // 3-3. 사용자게에 퍼미션 요청을 합니다. 요청 결과는 onRequestPermissionResult에서 수신됩니다.
+                ActivityCompat.requestPermissions(MainActivity.this, REQUIRED_PERMISSIONS,
+                        PERMISSIONS_REQUEST_CODE);
+
+
+            } else {
+                // 4-1. 사용자가 퍼미션 거부를 한 적이 없는 경우에는 퍼미션 요청을 바로 합니다.
+                // 요청 결과는 onRequestPermissionResult에서 수신됩니다.
+                ActivityCompat.requestPermissions(MainActivity.this, REQUIRED_PERMISSIONS,
+                        PERMISSIONS_REQUEST_CODE);
+            }
+
+        }
+
+    }
+
+
+    //여기부터는 GPS 활성화를 위한 메소드들
+    private void showDialogForLocationServiceSetting() {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        builder.setTitle("위치 서비스 비활성화");
+        builder.setMessage("앱을 사용하기 위해서는 위치 서비스가 필요합니다.\n"
+                + "위치 설정을 수정하실래요?");
+        builder.setCancelable(true);
+        builder.setPositiveButton("설정", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int id) {
+                Intent callGPSSettingIntent
+                        = new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                startActivityForResult(callGPSSettingIntent, GPS_ENABLE_REQUEST_CODE);
+            }
+        });
+        builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int id) {
+                dialog.cancel();
+            }
+        });
+        builder.create().show();
+    }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        switch (requestCode) {
+
+            case GPS_ENABLE_REQUEST_CODE:
+
+                //사용자가 GPS 활성 시켰는지 검사
+                if (checkLocationServicesStatus()) {
+                    if (checkLocationServicesStatus()) {
+
+                        Log.d("@@@", "onActivityResult : GPS 활성화 되있음");
+                        checkRunTimePermission();
+                        return;
+                    }
+                }
+
+                break;
+        }
+    }
+
+    public boolean checkLocationServicesStatus() {
+        LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+                || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+    }
 
     public void mapload()
     {
-        new list_Post().execute("http://192.168.219.101:3000/list");
+        new list_Post().execute("http://"+m_ip+"/list");
     }
     public void mainload()
     {
-        new init_Marker_Get().execute("http://192.168.219.101:3000/marker?id="+user_id);
+        new init_Marker_Get().execute("http://"+m_ip+"/marker?id="+user_id);
     }
     @Override
     public void onMapReady(final GoogleMap googleMap) {
@@ -327,6 +330,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 add_lng=point.longitude;
                 final MarkerOptions mop = new MarkerOptions();
 
+
                 items = ListItems.toArray(new String[ ListItems.size()]);
                 //listActivity.ListItem; List형식의 ItemListActivity 의 List
                 if(ListItems.size()==0)
@@ -335,10 +339,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 final List SelectedItems  = new ArrayList();
                 final EditText edittext = new EditText(MainActivity.this);
           //      System.out.println("리스트1");
-                edittext.setHint("정보입력");
+                edittext.setHint("장소이름 추가");
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                builder.setTitle("정보입력");
+                builder.setTitle("장소추가");
                 builder.setView(edittext);
+
          //       System.out.println("리스트2");
                 builder.setMultiChoiceItems(items, null,
                         new DialogInterface.OnMultiChoiceClickListener() {
@@ -354,7 +359,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 }
                             }
                         });
-             //   System.out.println("리스트3");
                 builder.setPositiveButton("Ok",
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
@@ -380,7 +384,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 Toast.makeText(getApplicationContext(),
                                         "Total "+ SelectedItems.size() +" Items Selected.\n"+ msg , Toast.LENGTH_LONG)
                                         .show();
-                                new add_Maker_Post().execute("http://192.168.219.101:3000/add_marker");
+                                new add_Maker_Post().execute("http://"+m_ip+"/add_marker");
 
                             }
                         });
@@ -392,7 +396,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             }
                         });
                 builder.show();
-             //   System.out.println("리스트4");
           }
 
         });
@@ -441,31 +444,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
 
-        // 디비에서 받아오는 거 까지 완료 하였으니 받아온 내용을 바탕으로 마커 추가하는 작업 필요
-//        for(int i=0;i<getitem_count;i++)
-//        {
-//            MarkerOptions mop = new MarkerOptions();
-//            if(test!=location_name[i]) {
-//                if(test!="")
-//                {
-//                    googleMap.addMarker(mop);
-//                }
-//                item_snippet="";
-//                test=location_name[i];
-//                mop.title(location_name[i]);
-//                mop.position(new LatLng(lat[i], lng[i]));
-//                item_snippet+=item_name[i]+",";
-//            }
-//            else
-//            {
-//                item_snippet+=item_name[i]+",";
-//            }
-//        }
-        //gpsTracker = new GpsTracker(MainActivity.this);
 
-
-
-        LatLng location = new LatLng(m_lat,m_lng); //현재 내 위치
+        LatLng location = new LatLng(clat,clng); //현재 내 위치
         MarkerOptions markerOptions = new MarkerOptions();
         markerOptions.title("현재 내 위치");
 //        markerOptions.snippet("스니펫");
@@ -737,14 +717,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             //    String x = result.substring(result.indexOf(":")+1,result.indexOf(","));
             try {
                 JSONObject jsonObject = new JSONObject(result);
+                System.out.println("json"+jsonObject);
                 String code = jsonObject.getString("code");
+                System.out.println("code"+code);
                 String msg = jsonObject.getString("message");
-
-
+                System.out.println("msg"+msg);
                 if (code.equals("200")) {
                     Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
                 } else {
-                    Toast.makeText(getApplicationContext(), "실패", Toast.LENGTH_SHORT).show();
+                   // Toast.makeText(getApplicationContext(), "실패", Toast.LENGTH_SHORT).show();
                 }
             } catch (JSONException e) {
                 e.printStackTrace();

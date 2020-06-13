@@ -34,6 +34,8 @@ import java.net.URL;
 //        }
 //    }
 public class JoinActivity extends AppCompatActivity {
+    LoginActivity lg = new LoginActivity();
+    String m_ip = lg.mip;
     public static final int REQUEST_CODE_MENU = 101;
     String userid = "1";
     String userpw = "1";
@@ -56,7 +58,7 @@ public class JoinActivity extends AppCompatActivity {
 
     public void submit(View view) {
         if (pw.getText().toString().equals(pwc.getText().toString())) {
-            new Post().execute("http://192.168.219.101:3000/join");
+            new Post().execute("http://"+m_ip+"/join");
             finish();
         } else Toast.makeText(JoinActivity.this, "비밀번호를 확인해주세요.", Toast.LENGTH_LONG).show();
     }

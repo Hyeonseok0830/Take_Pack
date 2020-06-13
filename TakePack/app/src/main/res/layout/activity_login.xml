@@ -23,16 +23,18 @@
 
         <TextView
             android:id="@+id/textViewID"
-            android:layout_width="100dp"
+            android:layout_width="50dp"
             android:layout_height="50dp"
             android:layout_weight="1"
+            android:layout_marginLeft="20dp"
             android:text="ID"
             android:textSize="28dp" />
 
         <EditText
             android:id="@+id/eid"
-            android:layout_width="213dp"
+            android:layout_width="250dp"
             android:layout_height="match_parent"
+            app:layout_constraintLeft_toRightOf="@+id/textViewID"
             android:layout_weight="1"
             android:hint="ID" />
 
@@ -45,9 +47,10 @@
 
         <TextView
             android:id="@+id/textViewpw"
-            android:layout_width="100dp"
+            android:layout_width="50dp"
             android:layout_height="50dp"
             android:layout_weight="1"
+            android:layout_marginLeft="20dp"
             android:text="PW"
             android:textSize="26dp" />
 
@@ -57,6 +60,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:ems="10"
+            app:layout_constraintLeft_toRightOf="@+id/textView"
             android:hint="password"
             android:inputType="textPassword" />
 
