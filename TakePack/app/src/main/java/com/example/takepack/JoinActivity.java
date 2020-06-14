@@ -1,7 +1,6 @@
 package com.example.takepack;
 
 
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
@@ -24,15 +23,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        super.onActivityResult(requestCode, resultCode, data);
-//        if (requestCode == REQUEST_CODE_MENU) {
-//            if (resultCode == RESULT_OK) {
-//                String menu = data.getExtras().getString("menu");
-//                Toast.makeText(getApplicationContext(), "응답으로 전달된 menu :" + menu, Toast.LENGTH_LONG).show();
-//            }
-//        }
-//    }
+
 public class JoinActivity extends AppCompatActivity {
     LoginActivity lg = new LoginActivity();
     String m_ip = lg.mip;
@@ -163,12 +154,6 @@ public class JoinActivity extends AppCompatActivity {
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-//            String x = result.substring(result.indexOf(":")+1,result.indexOf(","));
-//            if(x.equals("404"))
-//                Toast.makeText(getApplicationContext(), x, Toast.LENGTH_SHORT).show();
-//            else
-//                Toast.makeText(getApplicationContext(), x, Toast.LENGTH_SHORT).show();
-
         }
 
 

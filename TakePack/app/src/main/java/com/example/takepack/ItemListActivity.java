@@ -1,11 +1,9 @@
 package com.example.takepack;
 
 
-import android.content.ClipData;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import androidx.appcompat.app.AppCompatActivity;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -13,7 +11,8 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import org.json.JSONArray;
+import androidx.appcompat.app.AppCompatActivity;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -28,7 +27,6 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class ItemListActivity extends AppCompatActivity {
@@ -58,17 +56,13 @@ public class ItemListActivity extends AppCompatActivity {
 
 
         list = new MainActivity();
-        //list부분 메인부분으로 옮겨보기
         Items = new ArrayList<String>();
         Adapter = new ArrayAdapter<String>(this,
                 android.R.layout.simple_list_item_single_choice, Items);
         listView = (ListView) findViewById(R.id.listView1);
         listView.setAdapter(Adapter);
         listView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-//Main과 동시에 실행되어야함
-//        for(int a=0;a<result_item.length;a++)
-//            Items.add(result_item[a]);
-//        Adapter.notifyDataSetChanged();
+
 
         editText = (EditText) findViewById(R.id.editText);
         btnAdd = (Button) findViewById(R.id.btnAdd);
@@ -92,20 +86,6 @@ public class ItemListActivity extends AppCompatActivity {
         intentHome.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         intentHome.putExtra("uid",user_id);
         startActivity(intentHome);
-
-
-
-//        new Item_Post().execute("http://192.168.219.121:3000/list");
-//
-//        for(int i=0;i<result_item.length;i++)
-//        {
-//            if(!ItemList.contains(result_item[i]))
-//                ItemList.add(result_item[i]);
-//        }
-//        if(list.ListItems.size()!=ItemList.size())
-//            System.out.println("TLqkf");
-//        list.ListItems=ItemList;
-//        System.out.println("리스트 -> Main 리스트 복사"+list.ListItems.get(1));
     }
 
 

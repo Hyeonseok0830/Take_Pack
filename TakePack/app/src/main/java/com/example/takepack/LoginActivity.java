@@ -179,34 +179,10 @@ public class LoginActivity extends AppCompatActivity {
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-//            if(x.equals("200"))
-//            {
-//                Toast.makeText(getApplicationContext(), x, Toast.LENGTH_SHORT).show();
-//                Intent main_intent = new Intent(LoginActivity.this, MainActivity.class);
-//                startActivity(main_intent);
-//                finish();
-//            }
-//            else
-//            {
-//                Toast.makeText(getApplicationContext(), "아이디 또는 비밀번호를 확인하세요", Toast.LENGTH_SHORT).show();
-//            }
 
         }
 
 
     }
 }
-
-
-//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        super.onActivityResult(requestCode, resultCode, data);
-//        if (requestCode == REQUEST_CODE_MENU) {
-//            if (resultCode == RESULT_OK) {
-//                String menu = data.getExtras().getString("menu");
-//                Toast.makeText(getApplicationContext(), "응답으로 전달된 menu :" + menu, Toast.LENGTH_LONG).show();
-//            }
-//        }
-//    }
-
-// 안스에서 노드js로 데이터 보내는 부분
 

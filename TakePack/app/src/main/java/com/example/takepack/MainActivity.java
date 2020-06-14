@@ -154,14 +154,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         Intent Mintent = getIntent();
         user_id = Mintent.getExtras().getString("uid");
-
-//        user_id = SharedPreference.getAttribute(this, "userId");
-//        Log.i("아디는?",user_id);
+        
 
         SharedPreferences pref=getSharedPreferences("pref", Activity.MODE_PRIVATE);
         user_id=pref.getString("id_save", "");
-        //String pwd=pref.getString("pwd_save", "");
-        Log.i("아디는?",user_id);
+
 
 
         new init_Marker_Get().execute("http://" + m_ip + "/marker?id=" + user_id);
@@ -470,19 +467,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
                 items = ListItems.toArray(new String[ListItems.size()]);
-                //listActivity.ListItem; List형식의 ItemListActivity 의 List
                 if (ListItems.size() == 0)
                     System.out.println("리스트 비어있음");
 
                 final List SelectedItems = new ArrayList();
                 final EditText edittext = new EditText(MainActivity.this);
-                //      System.out.println("리스트1");
                 edittext.setHint("장소이름 추가");
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                 builder.setTitle("장소추가");
                 builder.setView(edittext);
 
-                //       System.out.println("리스트2");
                 builder.setMultiChoiceItems(items, null,
                         new DialogInterface.OnMultiChoiceClickListener() {
                             @Override
@@ -518,7 +512,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 insert_count = SelectedItems.size();
                                 add_item_list = temp;//nodejs에서 split후 string[] 에 담아 insert사용
 
-//                                Log.d("temp값",temp);
                                 Toast.makeText(getApplicationContext(),
                                         "Total " + SelectedItems.size() + " Items Selected.\n" + msg, Toast.LENGTH_LONG)
                                         .show();
@@ -541,7 +534,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         if (getitem_count == 0) {
             System.out.println("getitem_count이 0이다");
         }
-        System.out.println("아아악!!보다 먼저 실행되면 안됨");
         for (int i = 0; i < getitem_count; i++) {
             if (hash.containsKey(location_name[i]))//장소이름이 중복될 경우
             {
@@ -565,8 +557,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
         for (Map.Entry<String, String> entry : entries) {
-            //포문이 왜 안될까
-            System.out.println("문제가 생기는 부분!!!!!!!!!!!!!!" + x);
             System.out.print("key: " + entry.getKey());
             System.out.println(", Value: " + entry.getValue());
 
@@ -684,7 +674,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     marker_lat[i] = itemobject.getDouble("lat");
                     marker_lng[i] = itemobject.getDouble("lng");
                     System.out.println(item_name[i]);
-                    System.out.println("아아아악!!!!!");
+
                 }
 
                 if (code.equals("200")) {
@@ -774,8 +764,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 ListItems.clear();
                 //  System.out.println("리스트 포맷");
                 for (int a = 0; a < result_items.length; a++) {
-                    // System.out.println("ListItems에 "+ result_items[a]+" 를 넣음");
-                    if (!ListItems.contains(result_items[a]))//삭제후 마커추가시 오류
+                    if (!ListItems.contains(result_items[a]))
                         ListItems.add(result_items[a]);
                 }
 //                Adapter.notifyDataSetChanged();
