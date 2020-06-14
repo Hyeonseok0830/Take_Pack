@@ -6,6 +6,8 @@ import android.app.FragmentManager;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -26,6 +28,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
@@ -128,14 +131,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         gpsTracker = new GpsTracker(MainActivity.this);
 
-        double latitude = gpsTracker.getLatitude();
-        double longitude = gpsTracker.getLongitude();
-        clat = latitude;
-        clng = longitude;
         //String address = getCurrentAddress(latitude, longitude);
         // textview_address.setText(address);
 
-        Toast.makeText(MainActivity.this, "현재위치 \n위도 " + latitude + "\n경도 " + longitude, Toast.LENGTH_LONG).show();
+      //  Toast.makeText(MainActivity.this, "현재위치 \n위도 " + latitude + "\n경도 " + longitude, Toast.LENGTH_LONG).show();
 
         final TextView textview_address = (TextView)findViewById(R.id.state);
 
@@ -251,7 +250,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
 
     }
-
 
     //여기부터는 GPS 활성화를 위한 메소드들
     private void showDialogForLocationServiceSetting() {
@@ -442,7 +440,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         }
 
-
+        double latitude = gpsTracker.getLatitude();
+        double longitude = gpsTracker.getLongitude();
+        clat = latitude;
+        clng = longitude;
 
 
         LatLng location = new LatLng(clat,clng); //현재 내 위치
@@ -450,6 +451,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         markerOptions.title("현재 내 위치");
 //        markerOptions.snippet("스니펫");
         markerOptions.position(location);
+        BitmapDrawable bitmapdraw=(BitmapDrawable)getResources().getDrawable(R.drawable.myposition);
+        Bitmap b=bitmapdraw.getBitmap();
+        Bitmap smallMarker = Bitmap.createScaledBitmap(b, 75, 75, false);
+        markerOptions.icon(BitmapDescriptorFactory.fromBitmap(smallMarker));
+       // markerOptions.alpha(0.8f);
         googleMap.addMarker(markerOptions);
         googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 16));
     }

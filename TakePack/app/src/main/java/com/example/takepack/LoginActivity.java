@@ -30,7 +30,7 @@ public class LoginActivity extends AppCompatActivity {
 
     EditText id;
     EditText pw;
-    public String mip = "192.168.219.101:8888";
+    public String mip = "192.168.219.100:8888";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
