@@ -58,7 +58,6 @@ import java.util.Set;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback {
 
-    //ForegroundService fs = new ForegroundService();
 
     LoginActivity lg = new LoginActivity();
     String m_ip = lg.mip;
@@ -86,7 +85,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public String[] item_name;
     public double[] marker_lat;
     public double[] marker_lng;
-    String location_temp = "";
     String item_temp = "";
     public double m_lat = 0.0;
     public double m_lng = 0.0;
@@ -118,13 +116,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void n_stop()
     {
         stopped=false;
-        
+
     }
 
 //진동
     boolean vib = false;
     Vibrator v;
     MarkerOptions markerOptions = new MarkerOptions();
+    String dummy;
 
     boolean location_in = false;
     String msg = "이거 챙겼어?";
@@ -133,6 +132,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         v.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         builder.setTitle(msg)
+                .setMessage(dummy.substring(dummy.indexOf("#")+1))
                 .setPositiveButton("확인", new AlertDialog.OnClickListener(){
                     public void onClick(DialogInterface dialog, int which){
                         Log.i("알람" ,"종료");
@@ -153,21 +153,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onCreate(Bundle savedInstanceState) {
         v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         Intent Mintent = getIntent();
- //       user_id = Mintent.getExtras().getString("uid");
+        user_id = Mintent.getExtras().getString("uid");
 
-        user_id = SharedPreference.getAttribute(this, "userId");
-        Log.i("아디는?",user_id);
+//        user_id = SharedPreference.getAttribute(this, "userId");
+//        Log.i("아디는?",user_id);
 
         SharedPreferences pref=getSharedPreferences("pref", Activity.MODE_PRIVATE);
         user_id=pref.getString("id_save", "");
         //String pwd=pref.getString("pwd_save", "");
         Log.i("아디는?",user_id);
-
-
-
-
-
-
 
 
         new init_Marker_Get().execute("http://" + m_ip + "/marker?id=" + user_id);
@@ -185,57 +179,53 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             checkRunTimePermission();
         }
-
         gpsTracker = new GpsTracker(MainActivity.this);
 
-
         Handler mHandler = new Handler(Looper.getMainLooper());
-        mHandler.post(new Runnable() {
+        mHandler.postDelayed(new Runnable() {
+    //    Thread th = new Thread(new Runnable() {
             @Override
             public void run() {
                 Log.i("Thread", "시작");
                 while (!stopped) {
                     current_lat = gpsTracker.getLatitude();
                     current_lng = gpsTracker.getLongitude();
-                    String dummy = dis(current_lat, current_lng);
+                    dummy = dis(current_lat, current_lng);
                     Log.i("Thread", "" + current_lat + "," + current_lng);
                     Log.i("dis전체 결과", dummy);
                     String[] s = dummy.split("$");
                     Log.i("dis결과 result는?", dummy.substring(0, 3));
                     if (dummy.substring(0, 3).equals("iin")) { // 들어왔을때
-                        Log.i("위치이름", s[1] + "에 ");
-                        Log.i("아이템", s[2] + ": 이거 챙겨왔냐?");
+                        //Log.i("위치이름", s[1] + "에 ");
+                        //Log.i("아이템", s[2] + ": 이거 챙겨왔냐?");
                         msg = "이거 챙겨왔어?";
                         startVibrate();
                         stop();
                         location_in = true;
 
-                    } else if (dummy.substring(0, 3).equals("out") && location_in == true) { // 나갔을때
+                    } else if (dummy.substring(0, 3).equals("out") && location_in == false) { // 나갔을때
 
                         //챙겼냐?
-                        Log.i("위치이름", s[1] + "에서 ");
-                        Log.i("아이템", s[2] + ": 이거 챙겼냐?");
+                        //Log.i("위치이름", s[1] + "에서 ");
+                        //Log.i("아이템", s[2] + ": 이거 챙겼냐?");
                         msg = "이거 챙겼어?";
                         startVibrate();
                         stop();
                         location_in = false;
-                    } else if (dummy.substring(0, 3).equals("out") && location_in == false) { // 아무것도 아닐때
+                    } else if ((dummy.substring(0, 3).equals("out")||dummy.substring(0, 3).equals("nul")) && location_in == false) { // 아무것도 아닐때
                         //아무일도 일어나지 않음
                         //Log.i("위치이름", s[1] + "에서 ");
-                        startVibrate();
-                        stop();
-                        Log.i("아이템", ": 이거 챙겼냐?");
+                        Log.i("아이템", " 이거 챙겼냐?");
                         location_in = false;
                     }
-
                     try {
-                        Thread.sleep(10000);//3초 실제 배포 시 30초로 바꾸기
+                       Thread.sleep(5000);//3초 실제 배포 시 30초로 바꾸기
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
             }
-        });
+        },50000);
 
 
         Intent intent = new Intent(this, ForegroundService.class);
@@ -264,7 +254,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
         Log.i("Thread", "진짜시작" + getitem_count);
-        //th.start();
+      //  th.start();
     }
 
     //마커와 내 위치가 가깝나?
@@ -276,34 +266,38 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             Log.i("되나?","아이템 갯수 받아와지나?");
             String[] result_t = new String[getitem_count];
             for (int i = 0; i < location_name.length; i++) {
-                result_t[i] = (Math.abs(marker_lat[i] - my_lat) < 0.0004 && Math.abs(marker_lng[i] - my_lng) < 0.00037) ? "in" : "out";
+                result_t[i] = (Math.abs(marker_lat[i] - my_lat) < 0.0000001 || Math.abs(marker_lng[i] - my_lng) < 0.00000001) ? "in" : "out";
                 if (result_t[i].equals("in")) {
-                    in_location_name = "$"+location_name[i]+"$";
+                    in_location_name = "$"+location_name[i]+"#";
                     in_item_name += item_name[i] + ",";
                 }
-                else
+                else if(result_t[i].equals("out"))
                 {
-                    in_location_name = "$"+location_name[i]+"$";
+                    in_location_name = "$"+location_name[i]+"#";
                     in_item_name += item_name[i] + ",";
                 }
             }
             int incount = 0;
             int outcount = 0;
             for (int i = 0; i < location_name.length; i++) {
-                if (result_t[i].equals("in"))
+                if (result_t[i].equals("in")) {
                     incount++;
-                else if (result_t[i].equals("out"))
+                    result="iin" ;
+                }
+                else if (result_t[i].equals("out")) {
                     outcount++;
+                    result="out";
+                }
             }
-            if (location_name.length == incount)
-                result = "iin";
-            else if (location_name.length == outcount)
-                result = "out";
+//            if (location_name.length == incount)
+//                result = "iin";
+//            else if (location_name.length == outcount)
+//                result = "out";
 
             return result  + in_location_name  + in_item_name;
         }
         else
-            return  result + "$" + in_location_name + "$" + in_item_name;
+            return  result + "$" + in_location_name + "#" + in_item_name;
     }
 
     @Override
@@ -590,7 +584,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         current_lng = longitude;
 
 
-        LatLng location = new LatLng(current_lat, current_lng); //현재 내 위치
+        LatLng location = new LatLng(current_lat,current_lng); //현재 내 위치
 
         markerOptions.title("현재 내 위치");
 //        markerOptions.snippet("스니펫");
