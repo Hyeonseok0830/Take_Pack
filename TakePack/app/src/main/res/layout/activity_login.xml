@@ -65,6 +65,15 @@
             android:inputType="textPassword" />
 
     </LinearLayout>
+    <CheckBox
+        android:text="로그인 정보 기억하기"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="70dp"
+        android:id="@+id/checkBox"
+        />
+
+
     <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

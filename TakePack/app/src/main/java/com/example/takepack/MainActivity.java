@@ -1,22 +1,27 @@
 package com.example.takepack;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.FragmentManager;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
 import android.location.LocationManager;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.util.Log;
 import android.util.Pair;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -28,7 +33,6 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
@@ -54,6 +58,8 @@ import java.util.Set;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback {
 
+    //ForegroundService fs = new ForegroundService();
+
     LoginActivity lg = new LoginActivity();
     String m_ip = lg.mip;
     private GpsTracker gpsTracker;
@@ -78,8 +84,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public int getitem_count;
     public String[] location_name;
     public String[] item_name;
-    public double[] lat;
-    public double[] lng;
+    public double[] marker_lat;
+    public double[] marker_lng;
     String location_temp = "";
     String item_temp = "";
     public double m_lat = 0.0;
@@ -94,78 +100,218 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     //list 부분
     public List<String> ListItems;
     CharSequence[] items;
+//gps
+    private static final int GPS_ENABLE_REQUEST_CODE = 2001;
+    private static final int PERMISSIONS_REQUEST_CODE = 100;
+    String[] REQUIRED_PERMISSIONS = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};
 
 
     private LocationManager locationManager;
     private static final int REQUEST_CODE_LOCATION = 2;
-    double clng,clat;
+    double current_lng, current_lat;
+// 쓰레드
+    private boolean stopped = false;
+    public void stop()
+    {
+        stopped=true;
+    }
+    public void n_stop()
+    {
+        stopped=false;
+        
+    }
 
-/////////////////////////
-    private static final int GPS_ENABLE_REQUEST_CODE = 2001;
-    private static final int PERMISSIONS_REQUEST_CODE = 100;
-    String[] REQUIRED_PERMISSIONS  = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};
+//진동
+    boolean vib = false;
+    Vibrator v;
+    MarkerOptions markerOptions = new MarkerOptions();
 
+    boolean location_in = false;
+    String msg = "이거 챙겼어?";
 
+    public void startVibrate(){
+        v.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        builder.setTitle(msg)
+                .setPositiveButton("확인", new AlertDialog.OnClickListener(){
+                    public void onClick(DialogInterface dialog, int which){
+                        Log.i("알람" ,"종료");
+                        stopVibrate();
 
+                    }
+                })
+                .setCancelable(false);
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+    public void stopVibrate(){
+        v.cancel();
+        n_stop();
+        recreate();
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
-
-
+        v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         Intent Mintent = getIntent();
-        user_id = Mintent.getExtras().getString("uid");
-        new init_Marker_Get().execute("http://"+m_ip+"/marker?id=" + user_id);
+ //       user_id = Mintent.getExtras().getString("uid");
+
+        user_id = SharedPreference.getAttribute(this, "userId");
+        Log.i("아디는?",user_id);
+
+        SharedPreferences pref=getSharedPreferences("pref", Activity.MODE_PRIVATE);
+        user_id=pref.getString("id_save", "");
+        //String pwd=pref.getString("pwd_save", "");
+        Log.i("아디는?",user_id);
+
+
+
+
+
+
+
+
+        new init_Marker_Get().execute("http://" + m_ip + "/marker?id=" + user_id);
         super.onCreate(savedInstanceState);
 
-    //사용자의 현재 위치
+
+        //사용자의 현재 위치
 
         mapload();
         setContentView(R.layout.activity_main);
         if (!checkLocationServicesStatus()) {
 
             showDialogForLocationServiceSetting();
-        }else {
+        } else {
 
             checkRunTimePermission();
         }
 
         gpsTracker = new GpsTracker(MainActivity.this);
 
-        //String address = getCurrentAddress(latitude, longitude);
-        // textview_address.setText(address);
 
-      //  Toast.makeText(MainActivity.this, "현재위치 \n위도 " + latitude + "\n경도 " + longitude, Toast.LENGTH_LONG).show();
+        Handler mHandler = new Handler(Looper.getMainLooper());
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                Log.i("Thread", "시작");
+                while (!stopped) {
+                    current_lat = gpsTracker.getLatitude();
+                    current_lng = gpsTracker.getLongitude();
+                    String dummy = dis(current_lat, current_lng);
+                    Log.i("Thread", "" + current_lat + "," + current_lng);
+                    Log.i("dis전체 결과", dummy);
+                    String[] s = dummy.split("$");
+                    Log.i("dis결과 result는?", dummy.substring(0, 3));
+                    if (dummy.substring(0, 3).equals("iin")) { // 들어왔을때
+                        Log.i("위치이름", s[1] + "에 ");
+                        Log.i("아이템", s[2] + ": 이거 챙겨왔냐?");
+                        msg = "이거 챙겨왔어?";
+                        startVibrate();
+                        stop();
+                        location_in = true;
 
-        final TextView textview_address = (TextView)findViewById(R.id.state);
+                    } else if (dummy.substring(0, 3).equals("out") && location_in == true) { // 나갔을때
+
+                        //챙겼냐?
+                        Log.i("위치이름", s[1] + "에서 ");
+                        Log.i("아이템", s[2] + ": 이거 챙겼냐?");
+                        msg = "이거 챙겼어?";
+                        startVibrate();
+                        stop();
+                        location_in = false;
+                    } else if (dummy.substring(0, 3).equals("out") && location_in == false) { // 아무것도 아닐때
+                        //아무일도 일어나지 않음
+                        //Log.i("위치이름", s[1] + "에서 ");
+                        startVibrate();
+                        stop();
+                        Log.i("아이템", ": 이거 챙겼냐?");
+                        location_in = false;
+                    }
+
+                    try {
+                        Thread.sleep(10000);//3초 실제 배포 시 30초로 바꾸기
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
 
 
+        Intent intent = new Intent(this, ForegroundService.class);
 
-        fragmentManager=getFragmentManager();
+        if (Build.VERSION.SDK_INT >= 26) {
+            startForegroundService(intent);
+        } else {
+            startService(intent);
+        }
+        fragmentManager = getFragmentManager();
         mapFragment = (MapFragment) fragmentManager.findFragmentById(R.id.googleMap);
         mapFragment.getMapAsync(this);
 
         pairs = new ArrayList<>();
-        hash = new LinkedHashMap<String,String>();
+        hash = new LinkedHashMap<String, String>();
         Button listmode = (Button) findViewById(R.id.listMode);
         ListItems = new ArrayList<>();
         listmode.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(getApplicationContext(), ItemListActivity.class);
-                intent.putExtra("user_id",user_id);
+                intent.putExtra("user_id", user_id);
                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 startActivity(intent);
                 finish();
             }
         });
-
+        Log.i("Thread", "진짜시작" + getitem_count);
+        //th.start();
     }
+
+    //마커와 내 위치가 가깝나?
+    public String dis(double my_lat, double my_lng) {
+        String result = "null";
+        String in_location_name = "";
+        String in_item_name = "";
+        if (getitem_count > 0) {
+            Log.i("되나?","아이템 갯수 받아와지나?");
+            String[] result_t = new String[getitem_count];
+            for (int i = 0; i < location_name.length; i++) {
+                result_t[i] = (Math.abs(marker_lat[i] - my_lat) < 0.0004 && Math.abs(marker_lng[i] - my_lng) < 0.00037) ? "in" : "out";
+                if (result_t[i].equals("in")) {
+                    in_location_name = "$"+location_name[i]+"$";
+                    in_item_name += item_name[i] + ",";
+                }
+                else
+                {
+                    in_location_name = "$"+location_name[i]+"$";
+                    in_item_name += item_name[i] + ",";
+                }
+            }
+            int incount = 0;
+            int outcount = 0;
+            for (int i = 0; i < location_name.length; i++) {
+                if (result_t[i].equals("in"))
+                    incount++;
+                else if (result_t[i].equals("out"))
+                    outcount++;
+            }
+            if (location_name.length == incount)
+                result = "iin";
+            else if (location_name.length == outcount)
+                result = "out";
+
+            return result  + in_location_name  + in_item_name;
+        }
+        else
+            return  result + "$" + in_location_name + "$" + in_item_name;
+    }
+
     @Override
     public void onRequestPermissionsResult(int permsRequestCode,
                                            @NonNull String[] permissions,
                                            @NonNull int[] grandResults) {
 
-        if ( permsRequestCode == PERMISSIONS_REQUEST_CODE && grandResults.length == REQUIRED_PERMISSIONS.length) {
+        if (permsRequestCode == PERMISSIONS_REQUEST_CODE && grandResults.length == REQUIRED_PERMISSIONS.length) {
 
             // 요청 코드가 PERMISSIONS_REQUEST_CODE 이고, 요청한 퍼미션 개수만큼 수신되었다면
 
@@ -182,12 +328,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
 
 
-            if ( check_result ) {
+            if (check_result) {
 
                 //위치 값을 가져올 수 있음
                 ;
-            }
-            else {
+            } else {
                 // 거부한 퍼미션이 있다면 앱을 사용할 수 없는 이유를 설명해주고 앱을 종료합니다.2 가지 경우가 있습니다.
 
                 if (ActivityCompat.shouldShowRequestPermissionRationale(this, REQUIRED_PERMISSIONS[0])
@@ -197,7 +342,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     finish();
 
 
-                }else {
+                } else {
 
                     Toast.makeText(MainActivity.this, "퍼미션이 거부되었습니다. 설정(앱 정보)에서 퍼미션을 허용해야 합니다. ", Toast.LENGTH_LONG).show();
 
@@ -207,7 +352,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    void checkRunTimePermission(){
+    void checkRunTimePermission() {
 
         //런타임 퍼미션 처리
         // 1. 위치 퍼미션을 가지고 있는지 체크합니다.
@@ -225,7 +370,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
             // 3.  위치 값을 가져올 수 있음
-
 
 
         } else {  //2. 퍼미션 요청을 허용한 적이 없다면 퍼미션 요청이 필요합니다. 2가지 경우(3-1, 4-1)가 있습니다.
@@ -306,43 +450,45 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
     }
 
-    public void mapload()
-    {
-        new list_Post().execute("http://"+m_ip+"/list");
+    public void mapload() {
+        new list_Post().execute("http://" + m_ip + "/list");
     }
-    public void mainload()
-    {
-        new init_Marker_Get().execute("http://"+m_ip+"/marker?id="+user_id);
+
+    public void mainload() {
+        new init_Marker_Get().execute("http://" + m_ip + "/marker?id=" + user_id);
     }
+
     @Override
     public void onMapReady(final GoogleMap googleMap) {
-       // mainload();
+        // mainload();
+        mMap = googleMap;
+        mMap.setMyLocationEnabled(true);
 
         googleMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
             @Override
             public void onMapLongClick(final LatLng point) {
                 //mapload();
 
-                c_location = new LatLng(point.latitude,point.longitude); //커스텀 위치
-                add_lat=point.latitude;
-                add_lng=point.longitude;
+                c_location = new LatLng(point.latitude, point.longitude); //커스텀 위치
+                add_lat = point.latitude;
+                add_lng = point.longitude;
                 final MarkerOptions mop = new MarkerOptions();
 
 
-                items = ListItems.toArray(new String[ ListItems.size()]);
+                items = ListItems.toArray(new String[ListItems.size()]);
                 //listActivity.ListItem; List형식의 ItemListActivity 의 List
-                if(ListItems.size()==0)
+                if (ListItems.size() == 0)
                     System.out.println("리스트 비어있음");
 
-                final List SelectedItems  = new ArrayList();
+                final List SelectedItems = new ArrayList();
                 final EditText edittext = new EditText(MainActivity.this);
-          //      System.out.println("리스트1");
+                //      System.out.println("리스트1");
                 edittext.setHint("장소이름 추가");
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                 builder.setTitle("장소추가");
                 builder.setView(edittext);
 
-         //       System.out.println("리스트2");
+                //       System.out.println("리스트2");
                 builder.setMultiChoiceItems(items, null,
                         new DialogInterface.OnMultiChoiceClickListener() {
                             @Override
@@ -360,29 +506,29 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 builder.setPositiveButton("Ok",
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
-                                String msg="";
-                                String temp="";
+                                String msg = "";
+                                String temp = "";
                                 for (int i = 0; i < SelectedItems.size(); i++) {
                                     int index = (int) SelectedItems.get(i);
-                                    msg=msg+"\n"+(i+1)+" : " +ListItems.get(index);
-                                    temp+=ListItems.get(index)+",";
+                                    msg = msg + "\n" + (i + 1) + " : " + ListItems.get(index);
+                                    temp += ListItems.get(index) + ",";
 
                                 }
 
                                 mop.title(edittext.getText().toString());
-                                temp = temp.substring(0,temp.length()-1);
+                                temp = temp.substring(0, temp.length() - 1);
                                 mop.snippet(temp);
                                 mop.position(c_location);
                                 googleMap.addMarker(mop);
-                                add_name=edittext.getText().toString();
+                                add_name = edittext.getText().toString();
                                 insert_count = SelectedItems.size();
                                 add_item_list = temp;//nodejs에서 split후 string[] 에 담아 insert사용
 
 //                                Log.d("temp값",temp);
                                 Toast.makeText(getApplicationContext(),
-                                        "Total "+ SelectedItems.size() +" Items Selected.\n"+ msg , Toast.LENGTH_LONG)
+                                        "Total " + SelectedItems.size() + " Items Selected.\n" + msg, Toast.LENGTH_LONG)
                                         .show();
-                                new add_Maker_Post().execute("http://"+m_ip+"/add_marker");
+                                new add_Maker_Post().execute("http://" + m_ip + "/add_marker");
 
                             }
                         });
@@ -394,27 +540,25 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             }
                         });
                 builder.show();
-          }
+            }
 
         });
 
-        if(getitem_count==0) {
+        if (getitem_count == 0) {
             System.out.println("getitem_count이 0이다");
         }
         System.out.println("아아악!!보다 먼저 실행되면 안됨");
-        for(int i=0;i<getitem_count;i++)
-        {
-            if(hash.containsKey(location_name[i]))//장소이름이 중복될 경우
+        for (int i = 0; i < getitem_count; i++) {
+            if (hash.containsKey(location_name[i]))//장소이름이 중복될 경우
             {
                 item_temp += item_name[i] + ",";
                 hash.put(location_name[i], item_temp);
-            }
-            else//새로운 장소를 추가하는 경우
+            } else//새로운 장소를 추가하는 경우
             {
-                item_temp="";
+                item_temp = "";
                 item_temp += item_name[i] + ",";
                 hash.put(location_name[i], item_temp);
-                pairs.add(new Pair<>(lat[i],lng[i]));
+                pairs.add(new Pair<>(marker_lat[i], marker_lng[i]));
 
             }
         }
@@ -423,18 +567,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         Set<Map.Entry<String, String>> entries = hash.entrySet();
 
 
-        int x=0;
+        int x = 0;
 
 
         for (Map.Entry<String, String> entry : entries) {
             //포문이 왜 안될까
-            System.out.println("문제가 생기는 부분!!!!!!!!!!!!!!"+x);
-            System.out.print("key: "+ entry.getKey());
-            System.out.println(", Value: "+ entry.getValue());
+            System.out.println("문제가 생기는 부분!!!!!!!!!!!!!!" + x);
+            System.out.print("key: " + entry.getKey());
+            System.out.println(", Value: " + entry.getValue());
 
             m.title(entry.getKey())
-                    .snippet(entry.getValue().substring(0,entry.getValue().length()-1))
-            .position(new LatLng(pairs.get(x).first,pairs.get(x).second));
+                    .snippet(entry.getValue().substring(0, entry.getValue().length() - 1))
+                    .position(new LatLng(pairs.get(x).first, pairs.get(x).second));
             googleMap.addMarker(m);
             x++;
 
@@ -442,21 +586,21 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         double latitude = gpsTracker.getLatitude();
         double longitude = gpsTracker.getLongitude();
-        clat = latitude;
-        clng = longitude;
+        current_lat = latitude;
+        current_lng = longitude;
 
 
-        LatLng location = new LatLng(clat,clng); //현재 내 위치
-        MarkerOptions markerOptions = new MarkerOptions();
+        LatLng location = new LatLng(current_lat, current_lng); //현재 내 위치
+
         markerOptions.title("현재 내 위치");
 //        markerOptions.snippet("스니펫");
         markerOptions.position(location);
-        BitmapDrawable bitmapdraw=(BitmapDrawable)getResources().getDrawable(R.drawable.myposition);
-        Bitmap b=bitmapdraw.getBitmap();
-        Bitmap smallMarker = Bitmap.createScaledBitmap(b, 75, 75, false);
-        markerOptions.icon(BitmapDescriptorFactory.fromBitmap(smallMarker));
-       // markerOptions.alpha(0.8f);
-        googleMap.addMarker(markerOptions);
+//        BitmapDrawable bitmapdraw=(BitmapDrawable)getResources().getDrawable(R.drawable.myposition);
+//        Bitmap b=bitmapdraw.getBitmap();
+//        Bitmap smallMarker = Bitmap.createScaledBitmap(b, 75, 75, false);
+//        markerOptions.icon(BitmapDescriptorFactory.fromBitmap(smallMarker));
+//       // markerOptions.alpha(0.8f);
+//        googleMap.addMarker(markerOptions);
         googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 16));
     }
 
@@ -492,7 +636,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     String line = "";
 
                     //아래라인은 실제 reader에서 데이터를 가져오는 부분이다. 즉 node.js서버로부터 데이터를 가져온다.
-                    while((line = reader.readLine()) != null){
+                    while ((line = reader.readLine()) != null) {
                         buffer.append(line);
                     }
 
@@ -500,18 +644,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     return buffer.toString();
 
                     //아래는 예외처리 부분이다.
-                } catch (MalformedURLException e){
+                } catch (MalformedURLException e) {
                     e.printStackTrace();
                 } catch (IOException e) {
                     e.printStackTrace();
                 } finally {
                     //종료가 되면 disconnect메소드를 호출한다.
-                    if(con != null){
+                    if (con != null) {
                         con.disconnect();
                     }
                     try {
                         //버퍼를 닫아준다.
-                        if(reader != null){
+                        if (reader != null) {
                             reader.close();
                         }
                     } catch (IOException e) {
@@ -524,6 +668,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             return null;
         }
+
         protected void onPostExecute(String result) {
             try {
                 JSONObject jsonObject = new JSONObject(result);
@@ -532,19 +677,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 String itemlist = jsonObject.getString("item");
                 JSONArray getitem = new JSONArray(itemlist);
 
-                getitem_count=getitem.length();
+                getitem_count = getitem.length();
 
                 location_name = new String[getitem_count];
                 item_name = new String[getitem_count];
-                lat = new double[getitem_count];
-                lng = new double[getitem_count];
-                for(int i=0;i<getitem_count;i++)
-                {
+                marker_lat = new double[getitem_count];
+                marker_lng = new double[getitem_count];
+                for (int i = 0; i < getitem_count; i++) {
                     JSONObject itemobject = getitem.getJSONObject(i);
-                    location_name[i]=itemobject.getString("name");
-                    item_name[i]=itemobject.getString("item_name");
-                    lat[i]=itemobject.getDouble("lat");
-                    lng[i]=itemobject.getDouble("lng");
+                    location_name[i] = itemobject.getString("name");
+                    item_name[i] = itemobject.getString("item_name");
+                    marker_lat[i] = itemobject.getDouble("lat");
+                    marker_lng[i] = itemobject.getDouble("lng");
                     System.out.println(item_name[i]);
                     System.out.println("아아아악!!!!!");
                 }
@@ -559,6 +703,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         }
     }
+
     public class list_Post extends AsyncTask<String, String, String> {
         @Override
         protected String doInBackground(String... urls) {
@@ -633,10 +778,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 String r_item = jsonObject.getString("item");
                 result_items = r_item.split("#");
                 ListItems.clear();
-              //  System.out.println("리스트 포맷");
-                for(int a=0;a<result_items.length;a++) {
-                   // System.out.println("ListItems에 "+ result_items[a]+" 를 넣음");
-                    if(!ListItems.contains(result_items[a]))//삭제후 마커추가시 오류
+                //  System.out.println("리스트 포맷");
+                for (int a = 0; a < result_items.length; a++) {
+                    // System.out.println("ListItems에 "+ result_items[a]+" 를 넣음");
+                    if (!ListItems.contains(result_items[a]))//삭제후 마커추가시 오류
                         ListItems.add(result_items[a]);
                 }
 //                Adapter.notifyDataSetChanged();
@@ -650,6 +795,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         }
     }
+
     public class add_Maker_Post extends AsyncTask<String, String, String> {
         @Override
         protected String doInBackground(String... urls) {
@@ -723,15 +869,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             //    String x = result.substring(result.indexOf(":")+1,result.indexOf(","));
             try {
                 JSONObject jsonObject = new JSONObject(result);
-                System.out.println("json"+jsonObject);
+                System.out.println("json" + jsonObject);
                 String code = jsonObject.getString("code");
-                System.out.println("code"+code);
+                System.out.println("code" + code);
                 String msg = jsonObject.getString("message");
-                System.out.println("msg"+msg);
+                System.out.println("msg" + msg);
                 if (code.equals("200")) {
                     Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
                 } else {
-                   // Toast.makeText(getApplicationContext(), "실패", Toast.LENGTH_SHORT).show();
+                    // Toast.makeText(getApplicationContext(), "실패", Toast.LENGTH_SHORT).show();
                 }
             } catch (JSONException e) {
                 e.printStackTrace();

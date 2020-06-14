@@ -1,10 +1,13 @@
 package com.example.takepack;
 
 
+import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -30,14 +33,33 @@ public class LoginActivity extends AppCompatActivity {
 
     EditText id;
     EditText pw;
-    public String mip = "192.168.219.100:8888";
+    CheckBox cb;
+    String save_id;
+    String save_pw;
+    public String mip = "125.184.221.41:3000";//외부ip
+   // public String mip = "192.168.219.100:8888";//내부ip
+   SharedPreferences pref;
+   SharedPreferences.Editor editor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        pref = getSharedPreferences("pref", Activity.MODE_PRIVATE);
+         editor = pref.edit();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         id = (EditText) findViewById(R.id.eid);
         pw = (EditText) findViewById(R.id.epw);
+        cb = (CheckBox) findViewById(R.id.checkBox);
+        if(pref.getBoolean("check", false))
+        {
+            String sid=pref.getString("id_save", "");
+            String spw=pref.getString("pwd_save", "");
+            id.setText(sid);
+            pw.setText(spw);
+            cb.setChecked(true);;
+
+        }
+
     }
 
     public void join(View view) {
@@ -49,7 +71,6 @@ public class LoginActivity extends AppCompatActivity {
     public void login(View v) {
         //  Toast.makeText(getApplicationContext(), "로그인버튼눌렀따", Toast.LENGTH_SHORT).show();
         new login_Post().execute("http://"+mip+"/login");
-
 
     }
 
@@ -137,6 +158,16 @@ public class LoginActivity extends AppCompatActivity {
                 String user_id = jsonObject.getString("id");
 
                 if (code.equals("200")) {
+                    if(cb.isChecked()) {
+
+
+                        //SharedPreferences에 각 아이디를 지정하고 EditText 내용을 저장한다.
+                        editor.putString("id_save", id.getText().toString());
+                        editor.putString("pwd_save", pw.getText().toString());
+                        editor.putBoolean("check", cb.isChecked());
+                        // TODO : 필수 없으면 저장안됨
+                        editor.commit();
+                    }
                     Toast.makeText(getApplicationContext(), name, Toast.LENGTH_SHORT).show();
                     Intent main_intent = new Intent(LoginActivity.this, MainActivity.class);
                     main_intent.putExtra("uid", user_id);
