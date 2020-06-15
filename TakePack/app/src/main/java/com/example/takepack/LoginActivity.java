@@ -36,7 +36,7 @@ public class LoginActivity extends AppCompatActivity {
     CheckBox cb;
     String save_id;
     String save_pw;
-    public String mip = "125.184.221.41:3000";//외부ip
+    public String mip = "125.184.221.66:3333";//외부ip
    // public String mip = "192.168.219.100:8888";//내부ip
    SharedPreferences pref;
    SharedPreferences.Editor editor;

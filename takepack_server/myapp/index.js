@@ -28,6 +28,6 @@ app.use('/del_item',delitemRouer);
 app.use('/marker',markerRouter);
 app.use('/add_marker',addmarkerRouter);
 
-app.listen(8888, '192.168.219.100', function () {
+app.listen(9999, '192.168.219.100', function () {
     console.log('서버 실행 중...');
 });
