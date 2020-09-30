@@ -18,7 +18,6 @@ var listRouter = require('./routes/list');
 var additemRouer = require('./routes/add_item');
 var delitemRouer = require('./routes/del_item');
 var markerRouter = require('./routes/marker');
-var gpsRouter = require('./routes/gps');
 var addmarkerRouter = require('./routes/add_marker');
 
 app.use('/login',loginRouter);
@@ -28,7 +27,7 @@ app.use('/add_item',additemRouer);
 app.use('/del_item',delitemRouer);
 app.use('/marker',markerRouter);
 app.use('/add_marker',addmarkerRouter);
-app.use('/gps',gpsRouter);
+
 
 app.listen(3000, '192.168.0.8', function () {
     console.log('서버 실행 중...');
