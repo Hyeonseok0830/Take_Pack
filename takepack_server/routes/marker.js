@@ -7,7 +7,7 @@ var connection = mysql.createConnection(dbconfig);
 
 
 
-//get방식으로 바꾸어보기
+
 router.get('/', function (req, res) {
     
     console.log('Main 접속');
@@ -16,7 +16,6 @@ router.get('/', function (req, res) {
     
 
     var sql = 'select * from marker where user_id =' + mysql.escape(userid) + 'order by name';
-//var sql = 'select * from marker where user_id = test';
     connection.query(sql, userid, function (err, result) {
         var resultCode = 404;
         var message = '에러가 발생했습니다';

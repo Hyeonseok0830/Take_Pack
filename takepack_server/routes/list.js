@@ -16,7 +16,7 @@ router.post('/', function (req, res) {
     var sql = 'select * from item where user_id =' + mysql.escape(userid);
 
     connection.query(sql, userid, function (err, result) {
-        var send = '';
+        var send = '#';
         var resultCode = '404'
         if (err) {
             console.log(err);
@@ -27,7 +27,7 @@ router.post('/', function (req, res) {
             }
             resultCode = '200';
         }
-       // console.log(send + '전송 했음');
+        console.log(send + '전송 했음');
         res.json({
             'code': resultCode,
             'item': send

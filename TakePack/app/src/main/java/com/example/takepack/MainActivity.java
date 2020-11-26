@@ -58,6 +58,9 @@ import java.util.Set;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback {
 
+    private final long FINISH_INTERVAL_TIME = 2000;
+    private long   backPressedTime = 0;
+
 
     LoginActivity lg = new LoginActivity();
     String m_ip = lg.mip;
@@ -186,7 +189,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         startVibrate();
                         stop();
                         location_in = true;
-
                     } else if (dummy.startsWith("out") && !location_in) { // 나갔을때
                         msg = "잊으신 물건은 없습니까?";
                         startVibrate();
@@ -233,6 +235,21 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         Log.i("Thread", "Thread시작" + getitem_count);
         //  th.start();
 
+    }
+    @Override
+    public void onBackPressed() {
+        long tempTime = System.currentTimeMillis();
+        long intervalTime = tempTime - backPressedTime;
+
+        if (0 <= intervalTime && FINISH_INTERVAL_TIME >= intervalTime)
+        {
+            super.onBackPressed();
+
+        }
+        else
+        {
+            backPressedTime = tempTime;
+        }
     }
 
     //마커와 내 위치들 간 거리 비교
@@ -446,7 +463,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 BufferedReader reader = null;
                 try {
                     URL url = new URL(urls[0]);//url을 가져온다.
-                    System.out.println(url);
                     con = (HttpURLConnection) url.openConnection();
                     con.connect();//연결 수행
                     //입력 스트림 생성

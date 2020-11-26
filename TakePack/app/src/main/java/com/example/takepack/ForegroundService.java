@@ -46,6 +46,7 @@ public class ForegroundService extends Service
     public void onDestroy()
     {
         super.onDestroy();
+
     }
 
     @Override
