@@ -86,8 +86,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public double[] marker_lat;
     public double[] marker_lng;
     String item_temp = "";
-    public double m_lat = 0.0;
-    public double m_lng = 0.0;
     LatLng c_location;
 
     String[] result_items;
@@ -101,39 +99,38 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 //gps
 
 
-
     private LocationManager locationManager;
     private static final int REQUEST_CODE_LOCATION = 2;
     double current_lng, current_lat;
-// 쓰레드
+    // 쓰레드
     private boolean stopped = false;
-    public void stop()
-    {
-        stopped=true;
+
+    public void stop() {
+        stopped = true;
     }
-    public void n_stop()
-    {
-        stopped=false;
+
+    public void n_stop() {
+        stopped = false;
 
     }
 
-//진동
+    //진동
     boolean vib = false;
     Vibrator v;
     MarkerOptions markerOptions = new MarkerOptions();
     String dummy;
 
     boolean location_in = false;
-    String msg = "이거 챙겼어?";
+    String msg = "잊은 물건이 있습니까?";
 
-    public void startVibrate(){
+    public void startVibrate() {
         v.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         builder.setTitle(msg)
-                .setMessage(dummy.substring(dummy.indexOf("#")+1))
-                .setPositiveButton("확인", new AlertDialog.OnClickListener(){
-                    public void onClick(DialogInterface dialog, int which){
-                        Log.i("알람" ,"종료");
+                .setMessage(dummy.substring(dummy.indexOf("#") + 1))
+                .setPositiveButton("확인", new AlertDialog.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        Log.i("알람", "종료");
                         stopVibrate();
 
                     }
@@ -142,21 +139,22 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         AlertDialog dialog = builder.create();
         dialog.show();
     }
-    public void stopVibrate(){
+
+    public void stopVibrate() {
         v.cancel();
         n_stop();
         recreate();
     }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         Intent Mintent = getIntent();
         user_id = Mintent.getExtras().getString("uid");
-        
 
-        SharedPreferences pref=getSharedPreferences("pref", Activity.MODE_PRIVATE);
-        user_id=pref.getString("id_save", "");
 
+        SharedPreferences pref = getSharedPreferences("pref", Activity.MODE_PRIVATE);
+        user_id = pref.getString("id_save", "");
 
 
         new init_Marker_Get().execute(m_ip + "/marker?id=" + user_id);
@@ -169,10 +167,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         setContentView(R.layout.activity_main);
 
         gpsTracker = new GpsTracker(MainActivity.this);
-
         Handler mHandler = new Handler(Looper.getMainLooper());
         mHandler.postDelayed(new Runnable() {
-    //    Thread th = new Thread(new Runnable() {
+            //    Thread th = new Thread(new Runnable() {
             @Override
             public void run() {
                 Log.i("Thread", "시작");
@@ -184,36 +181,28 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     Log.i("dis전체 결과", dummy);
                     String[] s = dummy.split("$");
                     Log.i("dis결과 result는?", dummy.substring(0, 3));
-                    if (dummy.substring(0, 3).equals("iin")) { // 들어왔을때
-                        //Log.i("위치이름", s[1] + "에 ");
-                        //Log.i("아이템", s[2] + ": 이거 챙겨왔냐?");
-                        msg = "이거 챙겨왔어?";
+                    if (dummy.startsWith("iin")) { // 들어왔을때
+                        msg = "미리 등록한 소지품들을 챙겼습니까?";
                         startVibrate();
                         stop();
                         location_in = true;
 
-                    } else if (dummy.substring(0, 3).equals("out") && location_in == false) { // 나갔을때
-
-                        //챙겼냐?
-                        //Log.i("위치이름", s[1] + "에서 ");
-                        //Log.i("아이템", s[2] + ": 이거 챙겼냐?");
-                        msg = "이거 챙겼어?";
+                    } else if (dummy.startsWith("out") && !location_in) { // 나갔을때
+                        msg = "잊으신 물건은 없습니까?";
                         startVibrate();
                         stop();
                         location_in = false;
-                    } else if ((dummy.substring(0, 3).equals("out")||dummy.substring(0, 3).equals("nul")) && location_in == false) { // 아무것도 아닐때
-                        //아무일도 일어나지 않음
-                        Log.i("아이템", " 이거 챙겼냐?");
+                    } else if ((dummy.startsWith("out") || dummy.startsWith("nul")) && !location_in) { // 아무것도 아닐때
                         location_in = false;
                     }
                     try {
-                       Thread.sleep(5000);//3초 실제 배포 시 30초로 바꾸기
+                        Thread.sleep(3000);//3초 실제 배포 시 30초로 바꾸기
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
             }
-        },50000);
+        }, 50000);
 
 
         Intent intent = new Intent(this, ForegroundService.class);
@@ -241,27 +230,25 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 finish();
             }
         });
-        Log.i("Thread", "진짜시작" + getitem_count);
-      //  th.start();
+        Log.i("Thread", "Thread시작" + getitem_count);
+        //  th.start();
+
     }
 
-    //마커와 내 위치가 가깝나?
+    //마커와 내 위치들 간 거리 비교
     public String dis(double my_lat, double my_lng) {
         String result = "null";
         String in_location_name = "";
         String in_item_name = "";
         if (getitem_count > 0) {
-            Log.i("되나?","아이템 갯수 받아와지나?");
             String[] result_t = new String[getitem_count];
             for (int i = 0; i < location_name.length; i++) {
-                result_t[i] = (Math.abs(marker_lat[i] - my_lat) < 0.0000001 || Math.abs(marker_lng[i] - my_lng) < 0.00000001) ? "in" : "out";
+                result_t[i] = (distance(my_lat,my_lng,marker_lat[i],marker_lng[i])<5.0) ? "in" : "out"; //5m 범위 내 들어 왔을 시 in, 이탈 했을 시 out
                 if (result_t[i].equals("in")) {
-                    in_location_name = "$"+location_name[i]+"#";
+                    in_location_name = "$" + location_name[i] + "#";
                     in_item_name += item_name[i] + ",";
-                }
-                else if(result_t[i].equals("out"))
-                {
-                    in_location_name = "$"+location_name[i]+"#";
+                } else if (result_t[i].equals("out")) {
+                    in_location_name = "$" + location_name[i] + "#";
                     in_item_name += item_name[i] + ",";
                 }
             }
@@ -270,11 +257,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             for (int i = 0; i < location_name.length; i++) {
                 if (result_t[i].equals("in")) {
                     incount++;
-                    result="iin" ;
-                }
-                else if (result_t[i].equals("out")) {
+                    result = "iin";
+                } else if (result_t[i].equals("out")) {
                     outcount++;
-                    result="out";
+                    result = "out";
                 }
             }
 //            if (location_name.length == incount)
@@ -282,13 +268,30 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 //            else if (location_name.length == outcount)
 //                result = "out";
 
-            return result  + in_location_name  + in_item_name;
-        }
-        else
-            return  result + "$" + in_location_name + "#" + in_item_name;
+            return result + in_location_name + in_item_name;
+        } else
+            return result + "$" + in_location_name + "#" + in_item_name;
     }
 
+    private double distance(double lat1, double lon1, double lat2, double lon2) {
+        double theta = lon1 - lon2;
+        double dist = Math.sin(deg2rad(lat1)) * Math.sin(deg2rad(lat2)) +
+                Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+                        Math.cos(deg2rad(theta));
+        dist = Math.acos(dist);
+        dist = rad2deg(dist);
+        dist = dist * 60 * 1.1515;
+        dist = dist * 1609.344; // m 단위로 변경
+        return (dist);
+    }
 
+    private double deg2rad(double deg) {
+        return (deg * Math.PI / 180.0);
+    }
+
+    private double rad2deg(double rad) {
+        return (rad * 180.0/Math.PI);
+    }
 
     public void mapload() {
         new list_Post().execute(m_ip + "/list");
@@ -302,11 +305,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onMapReady(final GoogleMap googleMap) {
         // mainload();
         mMap = googleMap;
-        if (!lg.checkLocationServicesStatus()) {
-            lg.showDialogForLocationServiceSetting();
-        } else {
 
-            lg.checkRunTimePermission();
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
         }
         mMap.setMyLocationEnabled(true);
 
@@ -580,8 +588,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
 
         protected void onPostExecute(String result) {
-//          Log.d("reslut",result);
-            //    String x = result.substring(result.indexOf(":")+1,result.indexOf(","));
             try {
                 JSONObject jsonObject = new JSONObject(result);
                 String code = jsonObject.getString("code");
