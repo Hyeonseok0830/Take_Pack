@@ -29,6 +29,6 @@ app.use('/marker',markerRouter);
 app.use('/add_marker',addmarkerRouter);
 
 
-app.listen(3000, '192.168.0.8', function () {
+app.listen(3000, '192.168.0.2', function () {
     console.log('서버 실행 중...');
 });
