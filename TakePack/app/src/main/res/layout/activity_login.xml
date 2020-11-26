@@ -52,11 +52,11 @@
             android:layout_weight="1"
             android:layout_marginLeft="20dp"
             android:text="PW"
-            android:textSize="26dp" />
+            android:textSize="28dp" />
 
         <EditText
             android:id="@+id/epw"
-            android:layout_width="wrap_content"
+            android:layout_width="250dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:ems="10"

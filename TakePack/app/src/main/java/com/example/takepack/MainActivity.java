@@ -99,9 +99,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public List<String> ListItems;
     CharSequence[] items;
 //gps
-    private static final int GPS_ENABLE_REQUEST_CODE = 2001;
-    private static final int PERMISSIONS_REQUEST_CODE = 100;
-    String[] REQUIRED_PERMISSIONS = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};
+
 
 
     private LocationManager locationManager;
@@ -161,7 +159,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
 
-        new init_Marker_Get().execute("http://" + m_ip + "/marker?id=" + user_id);
+        new init_Marker_Get().execute(m_ip + "/marker?id=" + user_id);
         super.onCreate(savedInstanceState);
 
 
@@ -169,13 +167,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         mapload();
         setContentView(R.layout.activity_main);
-        if (!checkLocationServicesStatus()) {
 
-            showDialogForLocationServiceSetting();
-        } else {
-
-            checkRunTimePermission();
-        }
         gpsTracker = new GpsTracker(MainActivity.this);
 
         Handler mHandler = new Handler(Looper.getMainLooper());
@@ -211,7 +203,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         location_in = false;
                     } else if ((dummy.substring(0, 3).equals("out")||dummy.substring(0, 3).equals("nul")) && location_in == false) { // 아무것도 아닐때
                         //아무일도 일어나지 않음
-                        //Log.i("위치이름", s[1] + "에서 ");
                         Log.i("아이템", " 이거 챙겼냐?");
                         location_in = false;
                     }
@@ -297,179 +288,39 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             return  result + "$" + in_location_name + "#" + in_item_name;
     }
 
-    @Override
-    public void onRequestPermissionsResult(int permsRequestCode,
-                                           @NonNull String[] permissions,
-                                           @NonNull int[] grandResults) {
 
-        if (permsRequestCode == PERMISSIONS_REQUEST_CODE && grandResults.length == REQUIRED_PERMISSIONS.length) {
-
-            // 요청 코드가 PERMISSIONS_REQUEST_CODE 이고, 요청한 퍼미션 개수만큼 수신되었다면
-
-            boolean check_result = true;
-
-
-            // 모든 퍼미션을 허용했는지 체크합니다.
-
-            for (int result : grandResults) {
-                if (result != PackageManager.PERMISSION_GRANTED) {
-                    check_result = false;
-                    break;
-                }
-            }
-
-
-            if (check_result) {
-
-                //위치 값을 가져올 수 있음
-                ;
-            } else {
-                // 거부한 퍼미션이 있다면 앱을 사용할 수 없는 이유를 설명해주고 앱을 종료합니다.2 가지 경우가 있습니다.
-
-                if (ActivityCompat.shouldShowRequestPermissionRationale(this, REQUIRED_PERMISSIONS[0])
-                        || ActivityCompat.shouldShowRequestPermissionRationale(this, REQUIRED_PERMISSIONS[1])) {
-
-                    Toast.makeText(MainActivity.this, "퍼미션이 거부되었습니다. 앱을 다시 실행하여 퍼미션을 허용해주세요.", Toast.LENGTH_LONG).show();
-                    finish();
-
-
-                } else {
-
-                    Toast.makeText(MainActivity.this, "퍼미션이 거부되었습니다. 설정(앱 정보)에서 퍼미션을 허용해야 합니다. ", Toast.LENGTH_LONG).show();
-
-                }
-            }
-
-        }
-    }
-
-    void checkRunTimePermission() {
-
-        //런타임 퍼미션 처리
-        // 1. 위치 퍼미션을 가지고 있는지 체크합니다.
-        int hasFineLocationPermission = ContextCompat.checkSelfPermission(MainActivity.this,
-                Manifest.permission.ACCESS_FINE_LOCATION);
-        int hasCoarseLocationPermission = ContextCompat.checkSelfPermission(MainActivity.this,
-                Manifest.permission.ACCESS_COARSE_LOCATION);
-
-
-        if (hasFineLocationPermission == PackageManager.PERMISSION_GRANTED &&
-                hasCoarseLocationPermission == PackageManager.PERMISSION_GRANTED) {
-
-            // 2. 이미 퍼미션을 가지고 있다면
-            // ( 안드로이드 6.0 이하 버전은 런타임 퍼미션이 필요없기 때문에 이미 허용된 걸로 인식합니다.)
-
-
-            // 3.  위치 값을 가져올 수 있음
-
-
-        } else {  //2. 퍼미션 요청을 허용한 적이 없다면 퍼미션 요청이 필요합니다. 2가지 경우(3-1, 4-1)가 있습니다.
-
-            // 3-1. 사용자가 퍼미션 거부를 한 적이 있는 경우에는
-            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this, REQUIRED_PERMISSIONS[0])) {
-
-                // 3-2. 요청을 진행하기 전에 사용자가에게 퍼미션이 필요한 이유를 설명해줄 필요가 있습니다.
-                Toast.makeText(MainActivity.this, "이 앱을 실행하려면 위치 접근 권한이 필요합니다.", Toast.LENGTH_LONG).show();
-                // 3-3. 사용자게에 퍼미션 요청을 합니다. 요청 결과는 onRequestPermissionResult에서 수신됩니다.
-                ActivityCompat.requestPermissions(MainActivity.this, REQUIRED_PERMISSIONS,
-                        PERMISSIONS_REQUEST_CODE);
-
-
-            } else {
-                // 4-1. 사용자가 퍼미션 거부를 한 적이 없는 경우에는 퍼미션 요청을 바로 합니다.
-                // 요청 결과는 onRequestPermissionResult에서 수신됩니다.
-                ActivityCompat.requestPermissions(MainActivity.this, REQUIRED_PERMISSIONS,
-                        PERMISSIONS_REQUEST_CODE);
-            }
-
-        }
-
-    }
-
-    //여기부터는 GPS 활성화를 위한 메소드들
-    private void showDialogForLocationServiceSetting() {
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-        builder.setTitle("위치 서비스 비활성화");
-        builder.setMessage("앱을 사용하기 위해서는 위치 서비스가 필요합니다.\n"
-                + "위치 설정을 수정하실래요?");
-        builder.setCancelable(true);
-        builder.setPositiveButton("설정", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int id) {
-                Intent callGPSSettingIntent
-                        = new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                startActivityForResult(callGPSSettingIntent, GPS_ENABLE_REQUEST_CODE);
-            }
-        });
-        builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int id) {
-                dialog.cancel();
-            }
-        });
-        builder.create().show();
-    }
-
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        switch (requestCode) {
-
-            case GPS_ENABLE_REQUEST_CODE:
-
-                //사용자가 GPS 활성 시켰는지 검사
-                if (checkLocationServicesStatus()) {
-                    if (checkLocationServicesStatus()) {
-
-                        Log.d("@@@", "onActivityResult : GPS 활성화 되있음");
-                        checkRunTimePermission();
-                        return;
-                    }
-                }
-
-                break;
-        }
-    }
-
-    public boolean checkLocationServicesStatus() {
-        LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-
-        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
-                || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-    }
 
     public void mapload() {
-        new list_Post().execute("http://" + m_ip + "/list");
+        new list_Post().execute(m_ip + "/list");
     }
 
     public void mainload() {
-        new init_Marker_Get().execute("http://" + m_ip + "/marker?id=" + user_id);
+        new init_Marker_Get().execute(m_ip + "/marker?id=" + user_id);
     }
 
     @Override
     public void onMapReady(final GoogleMap googleMap) {
         // mainload();
         mMap = googleMap;
+        if (!lg.checkLocationServicesStatus()) {
+            lg.showDialogForLocationServiceSetting();
+        } else {
+
+            lg.checkRunTimePermission();
+        }
         mMap.setMyLocationEnabled(true);
 
         googleMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
             @Override
             public void onMapLongClick(final LatLng point) {
                 //mapload();
-
                 c_location = new LatLng(point.latitude, point.longitude); //커스텀 위치
                 add_lat = point.latitude;
                 add_lng = point.longitude;
                 final MarkerOptions mop = new MarkerOptions();
-
-
                 items = ListItems.toArray(new String[ListItems.size()]);
                 if (ListItems.size() == 0)
                     System.out.println("리스트 비어있음");
-
                 final List SelectedItems = new ArrayList();
                 final EditText edittext = new EditText(MainActivity.this);
                 edittext.setHint("장소이름 추가");
@@ -500,9 +351,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                     int index = (int) SelectedItems.get(i);
                                     msg = msg + "\n" + (i + 1) + " : " + ListItems.get(index);
                                     temp += ListItems.get(index) + ",";
-
                                 }
-
                                 mop.title(edittext.getText().toString());
                                 temp = temp.substring(0, temp.length() - 1);
                                 mop.snippet(temp);
@@ -511,18 +360,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 add_name = edittext.getText().toString();
                                 insert_count = SelectedItems.size();
                                 add_item_list = temp;//nodejs에서 split후 string[] 에 담아 insert사용
-
                                 Toast.makeText(getApplicationContext(),
                                         "Total " + SelectedItems.size() + " Items Selected.\n" + msg, Toast.LENGTH_LONG)
                                         .show();
                                 new add_Maker_Post().execute("http://" + m_ip + "/add_marker");
-
                             }
                         });
                 builder.setNegativeButton("Cancel",
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
-
                                 dialog.dismiss();
                             }
                         });
@@ -530,7 +376,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
 
         });
-
         if (getitem_count == 0) {
             System.out.println("getitem_count이 0이다");
         }
@@ -549,33 +394,23 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         }
         MarkerOptions m = new MarkerOptions();
-
         Set<Map.Entry<String, String>> entries = hash.entrySet();
-
-
         int x = 0;
-
-
         for (Map.Entry<String, String> entry : entries) {
             System.out.print("key: " + entry.getKey());
             System.out.println(", Value: " + entry.getValue());
-
             m.title(entry.getKey())
                     .snippet(entry.getValue().substring(0, entry.getValue().length() - 1))
                     .position(new LatLng(pairs.get(x).first, pairs.get(x).second));
             googleMap.addMarker(m);
             x++;
-
         }
-
         double latitude = gpsTracker.getLatitude();
         double longitude = gpsTracker.getLongitude();
         current_lat = latitude;
         current_lng = longitude;
 
-
         LatLng location = new LatLng(current_lat,current_lng); //현재 내 위치
-
         markerOptions.title("현재 내 위치");
 //        markerOptions.snippet("스니펫");
         markerOptions.position(location);
@@ -590,7 +425,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
     //서버 통신 부분
-
     public class init_Marker_Get extends AsyncTask<String, String, String> {
         @Override
         protected String doInBackground(String... urls) {
@@ -652,7 +486,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             return null;
         }
-
         protected void onPostExecute(String result) {
             try {
                 JSONObject jsonObject = new JSONObject(result);
@@ -674,9 +507,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     marker_lat[i] = itemobject.getDouble("lat");
                     marker_lng[i] = itemobject.getDouble("lng");
                     System.out.println(item_name[i]);
-
                 }
-
                 if (code.equals("200")) {
                     Toast.makeText(getApplicationContext(), "마커정보받아옴", Toast.LENGTH_SHORT).show();
                 } else {
@@ -695,14 +526,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 //JSONObject를 만들고 key value 형식으로 값을 저장해준다.
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put("id", user_id);
-//                jsonObject.put("pw", pw.getText().toString());
-
-
                 HttpURLConnection con = null;
                 BufferedReader reader = null;
-
                 try {
-                    //URL url = new URL("http://192.168.25.16:3000/users");
                     URL url = new URL(urls[0]);
                     //연결을 함
                     con = (HttpURLConnection) url.openConnection();
@@ -762,7 +588,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 String r_item = jsonObject.getString("item");
                 result_items = r_item.split("#");
                 ListItems.clear();
-                //  System.out.println("리스트 포맷");
                 for (int a = 0; a < result_items.length; a++) {
                     if (!ListItems.contains(result_items[a]))
                         ListItems.add(result_items[a]);
@@ -795,7 +620,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 BufferedReader reader = null;
 
                 try {
-                    //URL url = new URL("http://192.168.25.16:3000/users");
                     URL url = new URL(urls[0]);
                     //연결을 함
                     con = (HttpURLConnection) url.openConnection();
@@ -806,7 +630,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     con.setDoOutput(true);//Outstream으로 post 데이터를 넘겨주겠다는 의미
                     con.setDoInput(true);//Inputstream으로 서버로부터 응답을 받겠다는 의미
                     con.connect();
-
                     //서버로 보내기위해서 스트림 만듬
                     OutputStream outStream = con.getOutputStream();
                     //버퍼를 생성하고 넣음
@@ -848,8 +671,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
         protected void onPostExecute(String result) {
-//          Log.d("reslut",result);
-            //    String x = result.substring(result.indexOf(":")+1,result.indexOf(","));
+
             try {
                 JSONObject jsonObject = new JSONObject(result);
                 System.out.println("json" + jsonObject);

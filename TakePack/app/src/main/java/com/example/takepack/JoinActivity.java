@@ -28,8 +28,6 @@ public class JoinActivity extends AppCompatActivity {
     LoginActivity lg = new LoginActivity();
     String m_ip = lg.mip;
     public static final int REQUEST_CODE_MENU = 101;
-    String userid = "1";
-    String userpw = "1";
     EditText id;
     EditText name;
     EditText pw;
@@ -39,17 +37,19 @@ public class JoinActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_join);
-
         id = (EditText) findViewById(R.id.jid);
+        id.setNextFocusDownId(R.id.jpw);
         name = (EditText) findViewById(R.id.jname);
+        name.setNextFocusDownId(R.id.jpw);
         pw = (EditText) findViewById(R.id.jpw);
+        pw.setNextFocusDownId(R.id.jpwc);
         pwc = (EditText) findViewById(R.id.jpwc);
+        pwc.setNextFocusDownId(R.id.jemail);
         email = (EditText) findViewById(R.id.jemail);
     }
-
     public void submit(View view) {
         if (pw.getText().toString().equals(pwc.getText().toString())) {
-            new Post().execute("http://"+m_ip+"/join");
+            new Post().execute(m_ip+"/join");
             finish();
         } else Toast.makeText(JoinActivity.this, "비밀번호를 확인해주세요.", Toast.LENGTH_LONG).show();
     }
@@ -59,8 +59,6 @@ public class JoinActivity extends AppCompatActivity {
         Toast.makeText(JoinActivity.this, "cancel", Toast.LENGTH_LONG).show();
     }
 
-//Toast.makeText(JoinActivity.this, "put", Toast.LENGTH_LONG).show();
-    // 안스에서 노드js로 데이터 보내는 부분
     public class Post extends AsyncTask<String, String, String> {
         @Override
         protected String doInBackground(String... urls) {
@@ -79,11 +77,9 @@ public class JoinActivity extends AppCompatActivity {
                 BufferedReader reader = null;
 
                 try {
-                    //URL url = new URL("http://192.168.25.16:3000/users");
                     URL url = new URL(urls[0]);
                     //연결을 함
                     con = (HttpURLConnection) url.openConnection();
-
                     con.setRequestMethod("POST");//POST방식으로 보냄
                     con.setRequestProperty("Cache-Control", "no-cache");//캐시 설정
                     con.setRequestProperty("Content-Type", "application/json");//application JSON 형식으로 전송
@@ -111,7 +107,6 @@ public class JoinActivity extends AppCompatActivity {
                     while ((line = reader.readLine()) != null) {
                         buffer.append(line);
                     }
-
                     return buffer.toString();//서버로 부터 받은 값을 리턴해줌 아마 OK!!가 들어올것임
 
                 } catch (MalformedURLException e) {
@@ -139,7 +134,6 @@ public class JoinActivity extends AppCompatActivity {
 
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
-            //  testpost.setText(result);//서버로 부터 받은 값을 출력해주는 부분
             try {
                 JSONObject jsonObject = new JSONObject(result);
                 String msg = jsonObject.getString("code");

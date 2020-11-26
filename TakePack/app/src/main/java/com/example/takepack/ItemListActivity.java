@@ -32,9 +32,7 @@ import java.util.List;
 public class ItemListActivity extends AppCompatActivity {
     LoginActivity lg = new LoginActivity();
     String m_ip = lg.mip;
-
     MainActivity list;
-
     ArrayAdapter<String> Adapter;
     ListView listView;
     Button btnAdd, btnDel;
@@ -52,7 +50,7 @@ public class ItemListActivity extends AppCompatActivity {
         setContentView(R.layout.activity_itemlist);
         Intent i = getIntent();
         user_id = i.getExtras().getString("user_id");
-        new Item_Post().execute("http://"+m_ip+"/list");
+        new Item_Post().execute(m_ip+"/list");
 
 
         list = new MainActivity();
@@ -63,16 +61,13 @@ public class ItemListActivity extends AppCompatActivity {
         listView.setAdapter(Adapter);
         listView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
 
-
         editText = (EditText) findViewById(R.id.editText);
         btnAdd = (Button) findViewById(R.id.btnAdd);
         btnDel = (Button) findViewById(R.id.btnDel);
 
         btnAdd.setOnClickListener(listener);
         btnDel.setOnClickListener(listener);
-
         ItemList= new ArrayList<>();
-
 
     }
     @Override
@@ -80,14 +75,11 @@ public class ItemListActivity extends AppCompatActivity {
 
         super.onBackPressed();
 
-        System.out.println("뒤로가기 버튼 누름");
-
         Intent intentHome = new Intent(this, MainActivity.class);
         intentHome.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         intentHome.putExtra("uid",user_id);
         startActivity(intentHome);
     }
-
 
     private View.OnClickListener listener = new View.OnClickListener() {
         @Override
@@ -95,16 +87,12 @@ public class ItemListActivity extends AppCompatActivity {
             switch (v.getId()) {
                 case R.id.btnAdd:
                     //서버통신
-
                     item_name = editText.getText().toString();
                     if (item_name.length() != 0) {
                         Items.add(item_name);
-
                         editText.setText("");
-
                         Adapter.notifyDataSetChanged();
-
-                        new add_Item_Post().execute("http://"+m_ip+"/add_item");
+                        new add_Item_Post().execute(m_ip+"/add_item");
                     }
                     break;
                 case R.id.btnDel:
@@ -114,11 +102,10 @@ public class ItemListActivity extends AppCompatActivity {
                     if (pos != ListView.INVALID_POSITION) {
                         del_item=Adapter.getItem(pos);
                         Toast.makeText(getApplicationContext(), del_item, Toast.LENGTH_SHORT).show();
-                        new del_Item_Post().execute("http://"+m_ip+"/del_item");
+                        new del_Item_Post().execute(m_ip+"/del_item");
                         Items.remove(pos);
                         listView.clearChoices();
                         Adapter.notifyDataSetChanged();
-
                     }
                     break;
             }
@@ -137,7 +124,6 @@ public class ItemListActivity extends AppCompatActivity {
                 BufferedReader reader = null;
 
                 try {
-                    //URL url = new URL("http://192.168.25.16:3000/users");
                     URL url = new URL(urls[0]);
                     //연결을 함
                     con = (HttpURLConnection) url.openConnection();
@@ -188,8 +174,6 @@ public class ItemListActivity extends AppCompatActivity {
             return null;
         }
         protected void onPostExecute(String result) {
-//          Log.d("reslut",result);
-            //    String x = result.substring(result.indexOf(":")+1,result.indexOf(","));
             try {
                 JSONObject jsonObject = new JSONObject(result);
                 String code = jsonObject.getString("code");
@@ -212,12 +196,10 @@ public class ItemListActivity extends AppCompatActivity {
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put("item", del_item);
                 jsonObject.put("id", user_id);
-
                 HttpURLConnection con = null;
                 BufferedReader reader = null;
 
                 try {
-                    //URL url = new URL("http://192.168.25.16:3000/users");
                     URL url = new URL(urls[0]);
                     //연결을 함
                     con = (HttpURLConnection) url.openConnection();
@@ -268,8 +250,6 @@ public class ItemListActivity extends AppCompatActivity {
             return null;
         }
         protected void onPostExecute(String result) {
-//          Log.d("reslut",result);
-            //    String x = result.substring(result.indexOf(":")+1,result.indexOf(","));
             try {
                 JSONObject jsonObject = new JSONObject(result);
                 String code = jsonObject.getString("code");
@@ -291,14 +271,10 @@ public class ItemListActivity extends AppCompatActivity {
                 //JSONObject를 만들고 key value 형식으로 값을 저장해준다.
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put("id", user_id);
-//                jsonObject.put("pw", pw.getText().toString());
-
-
                 HttpURLConnection con = null;
                 BufferedReader reader = null;
 
                 try {
-                    //URL url = new URL("http://192.168.25.16:3000/users");
                     URL url = new URL(urls[0]);
                     //연결을 함
                     con = (HttpURLConnection) url.openConnection();
@@ -361,12 +337,10 @@ public class ItemListActivity extends AppCompatActivity {
                     {
                         if(!Items.contains(result_item[a]))
                             Items.add(result_item[a]);
-                        //     list.ListItems.add(result_item[a]);
                     }
                 }
                   Adapter.notifyDataSetChanged();
                 if (code.equals("200")) {
-                    //Toast.makeText(getApplicationContext(), r_item, Toast.LENGTH_SHORT).show();
                     System.out.println("아이템리스트 엑티비티 성공적으로 열었음");
                 } else {
                     Toast.makeText(getApplicationContext(), "실패", Toast.LENGTH_SHORT).show();
@@ -376,7 +350,4 @@ public class ItemListActivity extends AppCompatActivity {
             }
         }
     }
-
-
-
 }
