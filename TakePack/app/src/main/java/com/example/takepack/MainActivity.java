@@ -101,8 +101,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     //list 부분
     public List<String> ListItems;
     CharSequence[] items;
-//gps
 
+    SharedPreferences pref;
+    SharedPreferences.Editor editor;
 
     private LocationManager locationManager;
     private static final int REQUEST_CODE_LOCATION = 2;
@@ -154,8 +155,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-        Intent Mintent = getIntent();
-        user_id = Mintent.getExtras().getString("uid");
+        pref = getSharedPreferences("pref", Activity.MODE_PRIVATE);
+        String sid=pref.getString("id_save", "");
+        if(!sid.equals(null))
+            user_id=sid;
+        else {
+            Intent Mintent = getIntent();
+            user_id = Mintent.getExtras().getString("uid");
+        }
+
+
 
 
         SharedPreferences pref = getSharedPreferences("pref", Activity.MODE_PRIVATE);
@@ -184,10 +193,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     current_lat = gpsTracker.getLatitude();
                     current_lng = gpsTracker.getLongitude();
                     dummy = dis(current_lat, current_lng);
-                    Log.i("Thread", "" + current_lat + "," + current_lng);
-                    Log.i("dis전체 결과", dummy);
+                   // Log.i("Thread", "" + current_lat + "," + current_lng);
+                   // Log.i("dis전체 결과", dummy);
                     String[] s = dummy.split("$");
-                    Log.i("dis결과 result는?", dummy.substring(0, 3));
+                  //  Log.i("dis결과 result는?", dummy.substring(0, 3));
                     if (dummy.startsWith("iin")) { // 들어왔을때
                         msg = "미리 등록한 소지품들을 챙겼습니까?";
                         startVibrate();
@@ -208,7 +217,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     }
                 }
             }
-        }, 50000);
+        }, 5000); //5초 뒤 쓰레드 시작
 
 
         Intent intent = new Intent(this, ForegroundService.class);
@@ -236,7 +245,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 finish();
             }
         });
-        Log.i("Thread", "Thread시작" + getitem_count);
+      //  Log.i("Thread", "Thread시작" + getitem_count);
         //  th.start();
 
     }
@@ -249,7 +258,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         {
             //연속 두번 backbtn 눌렀을 때 (INTERVAL 2초)
             super.onBackPressed();
-
+            android.os.Process.killProcess(android.os.Process.myPid());
         }
         else
         {

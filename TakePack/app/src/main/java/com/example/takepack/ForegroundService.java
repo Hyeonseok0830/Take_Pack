@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.IBinder;
+import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
@@ -46,9 +47,11 @@ public class ForegroundService extends Service
     public void onDestroy()
     {
         super.onDestroy();
-
     }
-
+    @Override
+    public void onTaskRemoved(Intent rootIntent) { //핸들링 하는 부분
+        android.os.Process.killProcess(android.os.Process.myPid());
+    }
     @Override
     public IBinder onBind(Intent intent )
     {
