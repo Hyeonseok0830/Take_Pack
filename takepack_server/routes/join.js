@@ -6,7 +6,7 @@ var dbconfig = require('../config/database.js');
 var connection = mysql.createConnection(dbconfig);
 
 router.post('/', function (req, res) {
-    console.log(req.body);
+   // console.log(req.body);
     var userid = req.body.id;
     var userName = req.body.name;
     var userPwd = req.body.pw;
@@ -22,13 +22,14 @@ router.post('/', function (req, res) {
         var message = '에러가 발생했습니다';
 
         if (err) {
-            console.log(err);
+            resultCode=404;
+
         } else {
             resultCode = 200;
             message = '회원가입에 성공했습니다.';
         }
 
-        res.json({
+        res.status(resultCode).json({
             'code': resultCode,
             'message': message
         });

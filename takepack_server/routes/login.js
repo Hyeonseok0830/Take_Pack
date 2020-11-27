@@ -20,29 +20,26 @@ router.post('/', function (req, res) {
         var message = '에러가 발생했습니다';
         var sendid = "";
         if (err) {
-            console.log(err);
+            resultCode=404;
+            
+            
         } else {
             if (result.length === 0) {
-                resultCode = 204;
+                resultCode = 202;
                 message = '존재하지 않는 계정입니다!';
                 sendid = ""
-                console.log(message);
             } else if (userpw !== result[0].pw) {
-                resultCode = 204;
-                console.log(message);
+                resultCode = 202;            
                 message = '비밀번호가 틀렸습니다!';
                 sendid = result[0].id;
             } else {
                 resultCode = 200;
                 message = '로그인 성공! ' + result[0].name + '님 환영합니다!';
-                sendid = result[0].id;
-                console.log(message);
-                //  console.log(sendid);
+                sendid = result[0].id;            
             }
         }
 
-        res.json({
-
+        res.status(resultCode).json({           
             'code': resultCode,
             'message': message,
             'id': sendid

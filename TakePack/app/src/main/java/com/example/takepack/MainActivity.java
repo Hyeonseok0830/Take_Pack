@@ -24,11 +24,10 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
+import com.google.android.gms.common.api.Response;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
@@ -54,7 +53,10 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+
+import javax.net.ssl.HttpsURLConnection;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback {
 
@@ -166,8 +168,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         //사용자의 현재 위치
 
-        mapload();
+
         setContentView(R.layout.activity_main);
+        mapload();
+
 
         gpsTracker = new GpsTracker(MainActivity.this);
         Handler mHandler = new Handler(Looper.getMainLooper());
@@ -243,6 +247,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         if (0 <= intervalTime && FINISH_INTERVAL_TIME >= intervalTime)
         {
+            //연속 두번 backbtn 눌렀을 때 (INTERVAL 2초)
             super.onBackPressed();
 
         }
@@ -311,7 +316,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     public void mapload() {
-        new list_Post().execute(m_ip + "/list");
+        new list_Get().execute(m_ip + "/list?id="+user_id);
     }
 
     public void mainload() {
@@ -344,13 +349,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 add_lng = point.longitude;
                 final MarkerOptions mop = new MarkerOptions();
                 items = ListItems.toArray(new String[ListItems.size()]);
-                if (ListItems.size() == 0)
-                    System.out.println("리스트 비어있음");
+
                 final List SelectedItems = new ArrayList();
                 final EditText edittext = new EditText(MainActivity.this);
+
                 edittext.setHint("장소이름 추가");
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                builder.setTitle("장소추가");
+                if (ListItems.size() == 0)
+                {
+                    builder.setTitle("장소추가(아이템을 추가하면 함께 등록할 수 있습니다.)");
+                }
+                else {
+                    builder.setTitle("장소추가");
+                }
                 builder.setView(edittext);
 
                 builder.setMultiChoiceItems(items, null,
@@ -388,7 +399,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 Toast.makeText(getApplicationContext(),
                                         "Total " + SelectedItems.size() + " Items Selected.\n" + msg, Toast.LENGTH_LONG)
                                         .show();
-                                new add_Maker_Post().execute("http://" + m_ip + "/add_marker");
+                                new add_Maker_Post().execute(m_ip + "/add_marker");
                             }
                         });
                 builder.setNegativeButton("Cancel",
@@ -401,9 +412,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
 
         });
-        if (getitem_count == 0) {
-            System.out.println("getitem_count이 0이다");
-        }
         for (int i = 0; i < getitem_count; i++) {
             if (hash.containsKey(location_name[i]))//장소이름이 중복될 경우
             {
@@ -448,7 +456,64 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 16));
     }
 
+    public class list_Get extends AsyncTask<String,String,String> {
+        @Override
+        protected String doInBackground(String... urls) {
 
+            HttpURLConnection con = null;
+            BufferedReader reader = null;
+            try {
+                URL url = new URL(urls[0]);
+                con = (HttpURLConnection)url.openConnection();
+                con.connect();
+                InputStream stream = con.getInputStream();
+                reader = new BufferedReader(new InputStreamReader(stream));
+                StringBuffer buffer = new StringBuffer();
+                String line = "";
+                while ((line = reader.readLine()) != null) buffer.append(line);
+                return buffer.toString();
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }finally {
+                con.disconnect();
+                try {
+                    if(reader != null)
+                        reader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            return null;
+        }
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            try {
+
+                JSONObject jsonObject = new JSONObject(s);
+                //String code = jsonObject.getString("code");
+                String r_item = jsonObject.getString("item");
+                result_items = r_item.split("#");
+                ListItems.clear();
+                for (int a = 0; a < result_items.length; a++) {
+                    if (!ListItems.contains(result_items[a]))
+                        ListItems.add(result_items[a]);
+                }
+//                Adapter.notifyDataSetChanged();
+
+//                if (code.equals("200")) {
+//                    Toast.makeText(getApplicationContext(), r_item, Toast.LENGTH_SHORT).show();
+//                } else {
+//                    Toast.makeText(getApplicationContext(), "실패", Toast.LENGTH_SHORT).show();
+//                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+        }
+    }
     //서버 통신 부분
     public class init_Marker_Get extends AsyncTask<String, String, String> {
         @Override
@@ -534,89 +599,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
                 if (code.equals("200")) {
                     Toast.makeText(getApplicationContext(), "마커정보받아옴", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(getApplicationContext(), "실패", Toast.LENGTH_SHORT).show();
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    public class list_Post extends AsyncTask<String, String, String> {
-        @Override
-        protected String doInBackground(String... urls) {
-            try {
-                //JSONObject를 만들고 key value 형식으로 값을 저장해준다.
-                JSONObject jsonObject = new JSONObject();
-                jsonObject.put("id", user_id);
-                HttpURLConnection con = null;
-                BufferedReader reader = null;
-                try {
-                    URL url = new URL(urls[0]);
-                    //연결을 함
-                    con = (HttpURLConnection) url.openConnection();
-                    con.setRequestMethod("POST");//POST방식으로 보냄
-                    con.setRequestProperty("Cache-Control", "no-cache");//캐시 설정
-                    con.setRequestProperty("Content-Type", "application/json");//application JSON 형식으로 전송
-                    con.setRequestProperty("Accept", "text/html");//서버에 response 데이터를 html로 받음
-                    con.setDoOutput(true);//Outstream으로 post 데이터를 넘겨주겠다는 의미
-                    con.setDoInput(true);//Inputstream으로 서버로부터 응답을 받겠다는 의미
-                    con.connect();
-
-                    //서버로 보내기위해서 스트림 만듬
-                    OutputStream outStream = con.getOutputStream();
-                    //버퍼를 생성하고 넣음
-                    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outStream));
-                    writer.write(jsonObject.toString());
-                    writer.flush();
-                    writer.close();//버퍼를 받아줌
-
-                    //서버로 부터 데이터를 받음
-                    InputStream stream = con.getInputStream();
-                    reader = new BufferedReader(new InputStreamReader(stream));
-                    StringBuffer buffer = new StringBuffer();
-                    String line = "";
-                    while ((line = reader.readLine()) != null) {
-                        buffer.append(line);
-                    }
-                    return buffer.toString();//서버로 부터 받은 값을 리턴해줌 아마 OK!!가 들어올것임
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } finally {
-                    if (con != null) {
-                        con.disconnect();
-                    }
-                    try {
-                        if (reader != null) {
-                            reader.close();//버퍼를 닫아줌
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-
-        protected void onPostExecute(String result) {
-            try {
-                JSONObject jsonObject = new JSONObject(result);
-                String code = jsonObject.getString("code");
-                String r_item = jsonObject.getString("item");
-                result_items = r_item.split("#");
-                ListItems.clear();
-                for (int a = 0; a < result_items.length; a++) {
-                    if (!ListItems.contains(result_items[a]))
-                        ListItems.add(result_items[a]);
-                }
-//                Adapter.notifyDataSetChanged();
-                if (code.equals("200")) {
-                    Toast.makeText(getApplicationContext(), r_item, Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(getApplicationContext(), "실패", Toast.LENGTH_SHORT).show();
                 }

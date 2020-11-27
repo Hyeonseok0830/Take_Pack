@@ -7,12 +7,12 @@ var connection = mysql.createConnection(dbconfig);
 
 router.post('/', function (req, res) {
 
-    console.log('아이템제거버튼 클릭');
-    console.log(req.body);
+    //console.log('아이템제거버튼 클릭');
+    //console.log(req.body);
 
     var useritem = req.body.item;
     var userid = req.body.id;
-    console.log(useritem);
+    //console.log(useritem);
     // 삭제를 수행하는 sql문.
     var sql = 'DELETE FROM item  WHERE item_name = ? AND user_id = ? ;'
     var params = [useritem, userid];
@@ -23,13 +23,14 @@ router.post('/', function (req, res) {
         var message = '에러가 발생했습니다';
 
         if (err) {
-            console.log(err);
+            resultCode=404;
+
         } else {
             resultCode = 200;
             message = useritem + '를 삭제 하였습니다.';
         }
-        console.log(message);
-        res.json({
+        //console.log(message);
+        res.status(resultCode).json({
             'code': resultCode,
             'message': message
         });

@@ -8,7 +8,6 @@ var connection = mysql.createConnection(dbconfig);
 router.post('/', function (req, res) {
 
     console.log('장소추가버튼 클릭');
-    console.log(req.body);
     var userid = req.body.id;
     var add_name = req.body.name;
     var item_list = req.body.item_list;
@@ -27,17 +26,16 @@ router.post('/', function (req, res) {
         // sql 문의 ?는 두번째 매개변수로 넘겨진 params의 값으로 치환된다.
         connection.query(sql, rowVlaues, function (err, result) {
             if (err) {
-                resultCode = 404;
-                message = '에러가 발생했습니다';
-                console.log(err);
+                resultCode=404;
+             
             } else {
                 resultCode = 200;
                 message = strArray[i] + '을 추가 하였습니다.';
-                console.log(message);
-                console.log(resultCode);
+               // console.log(message);
+               // console.log(resultCode);
             }
         });
-        res.json({
+        res.status(resultCode).json({
             'code': resultCode,
             'message': message
         });

@@ -13,8 +13,6 @@ router.get('/', function (req, res) {
     console.log('Main 접속');
     var userid = req.query.id;
     console.log(userid);
-    
-
     var sql = 'select * from marker where user_id =' + mysql.escape(userid) + 'order by name';
     connection.query(sql, userid, function (err, result) {
         var resultCode = 404;
@@ -22,7 +20,8 @@ router.get('/', function (req, res) {
       
         var List = new Array();
         if (err) {
-            console.log(err);
+            resultCode = 404;
+
         } else {
             for (var i = 0; i < result.length; i++) {
                 var data = new Object();
@@ -35,13 +34,13 @@ router.get('/', function (req, res) {
 
             var jsonData = JSON.stringify(List);
             var senddata = JSON.parse(jsonData);
-            console.log(senddata);
+            //console.log(senddata);
             item = jsonData;
             resultCode = 200;
             message = '성공적으로 불러 왔습니다.'
         }
 
-        res.json({
+        res.status(resultCode).json({
 
             'code': resultCode,
             'message': message,

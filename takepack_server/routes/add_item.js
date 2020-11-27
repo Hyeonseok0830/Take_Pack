@@ -10,7 +10,6 @@ router.post('/', function (req, res) {
 
     console.log('아이템추가버튼 클릭');
     console.log(req.body);
-
     var useritem = req.body.item;
     var userid = req.body.id;
     // 삽입을 수행하는 sql문.
@@ -23,13 +22,13 @@ router.post('/', function (req, res) {
         var message = '에러가 발생했습니다';
 
         if (err) {
-            console.log(err);
+            resultCode=404;
+
         } else {
             resultCode = 200;
             message = useritem + '을 추가 하였습니다.';
         }
-        console.log(message);
-        res.json({
+        res.status(resultCode).json({
             'code': resultCode,
             'message': message
         });
