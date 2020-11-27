@@ -20,7 +20,6 @@ router.post('/', function (req, res) {
     connection.query(sql, params, function (err, result) {
         var resultCode = 404;
         var message = '에러가 발생했습니다';
-
         if (err) {
             resultCode=404;
 

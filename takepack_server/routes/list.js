@@ -7,15 +7,15 @@ var dbconfig = require('../config/database.js');
 var connection = mysql.createConnection(dbconfig);
 router.get('/',function(req,res)
 {    
+    
     var userid = req.query.id;
     var sql = 'select * from item where user_id =' + mysql.escape(userid);
-    
     connection.query(sql,userid,function (err,result){
         var send = '#';
         var resultCode = 404;
         if (err){
-            resultCode = 404;
-            
+          
+            resultCode = 404;            
         }
         else{
             for (var i =0; i < result.length;i++)
@@ -24,6 +24,7 @@ router.get('/',function(req,res)
             }
             resultCode = 200
         }
+        console.log(userid);
         res.status(resultCode).json({           
             'code': resultCode, 
             'item': send

@@ -49,11 +49,13 @@ public class LoginActivity extends AppCompatActivity {
    SharedPreferences.Editor editor;
     private static final int GPS_ENABLE_REQUEST_CODE = 2001;
     private static final int PERMISSIONS_REQUEST_CODE = 100;
+    public static String login_id;
+    public static boolean check;
     String[] REQUIRED_PERMISSIONS = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         pref = getSharedPreferences("pref", Activity.MODE_PRIVATE);
-         editor = pref.edit();
+        editor = pref.edit();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         if (!checkLocationServicesStatus()) {
@@ -162,13 +164,10 @@ public class LoginActivity extends AppCompatActivity {
         }
 
         protected void onPostExecute(String result) {
-//          Log.d("reslut",result);
-            //    String x = result.substring(result.indexOf(":")+1,result.indexOf(","));
             try {
-
                 JSONObject jsonObject = new JSONObject(result);
                 String code = jsonObject.getString("code");
-                String name = jsonObject.getString("message");
+                String msg = jsonObject.getString("message");
                 String user_id = jsonObject.getString("id");
 
                 if (code.equals("200")) {
@@ -179,9 +178,10 @@ public class LoginActivity extends AppCompatActivity {
                         editor.putBoolean("check", cb.isChecked());
                         editor.commit();
                     }
-                    Toast.makeText(getApplicationContext(), name, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
                     Intent main_intent = new Intent(LoginActivity.this, MainActivity.class);
-                    main_intent.putExtra("uid", user_id);
+                    login_id = id.getText().toString();
+                    check = cb.isChecked();
                     startActivity(main_intent);
                     finish();
                 } else {

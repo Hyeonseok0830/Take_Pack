@@ -4,4 +4,5 @@ module.exports = {
   password : 'knu2020!',
   port     : 3306,
   database : 'takepack',
+  multipleStatements: true 
 };

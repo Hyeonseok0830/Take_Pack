@@ -26,6 +26,7 @@ router.post('/', function (req, res) {
         // sql 문의 ?는 두번째 매개변수로 넘겨진 params의 값으로 치환된다.
         connection.query(sql, rowVlaues, function (err, result) {
             if (err) {
+                console.log(err);
                 resultCode=404;
              
             } else {
@@ -35,7 +36,7 @@ router.post('/', function (req, res) {
                // console.log(resultCode);
             }
         });
-        res.status(resultCode).json({
+        res.json({
             'code': resultCode,
             'message': message
         });
