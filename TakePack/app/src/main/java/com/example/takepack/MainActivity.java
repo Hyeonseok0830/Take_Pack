@@ -403,7 +403,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                     temp += ListItems.get(index) + ",";
                                 }
                                 mop.title(edittext.getText().toString());
-                                temp = temp.substring(0, temp.length() - 1);
+                                if(temp.length()>0)
+                                    temp = temp.substring(0, temp.length() - 1);
+                                else {
+                                    Toast.makeText(getApplicationContext(), "아이템을 선택해 주세요", Toast.LENGTH_SHORT).show();
+                                    return;
+                                }
                                 mop.snippet(temp);
                                 mop.position(c_location);
                                 googleMap.addMarker(mop);
