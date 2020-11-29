@@ -1,6 +1,7 @@
 # Take_Pack
 
-##
+![아이콘](git_img/main.png)
+
 <details>
     <summary>개요</summary>
 
