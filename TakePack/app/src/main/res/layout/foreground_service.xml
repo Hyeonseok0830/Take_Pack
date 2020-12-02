@@ -20,6 +20,7 @@
             android:layout_width = "match_parent"
             android:layout_height = "wrap_content"
             android:layout_gravity = "center_vertical"
+            android:id="@+id/notification_text"
             android:text = "Take_Pack"
             android:textColor = "@color/colorPrimaryDark"
             android:textSize = "18sp"/>
@@ -28,6 +29,7 @@
             android:layout_width = "match_parent"
             android:layout_height = "wrap_content"
             android:layout_gravity = "center_vertical"
+            android:id="@+id/notification_content"
             android:text = "실행중"
             android:textColor = "@color/colorPrimaryDark"
             android:textSize = "14sp"/>

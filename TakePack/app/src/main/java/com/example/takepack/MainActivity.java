@@ -25,6 +25,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
@@ -56,6 +57,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -115,12 +118,24 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     Thread t;
     Handler mHandler = null;
 
+    //타이머
+
+    static TimerTask tt2;
+    static Timer timer2;
     private boolean stopped = false;
     public void stop() {
         stopped = true;
     }
     public void handler_start() {stopped = false; }
     private int second = 0;
+
+
+    //
+    int timerTime = 30; // 30 초를 디폴트로.
+    // Timer 를 처리해주는 핸들러
+    TimerHandler timer;
+    boolean isRunning = true;
+    int status = 0 ; // 0:정지, 1:시작, 2:일시정지
 
     //진동
     boolean vib = false;
@@ -129,37 +144,94 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     String dummy;
 
     boolean location_in = false;
-    String msg = "잊은 물건이 있습니까?";
+    String dlg_msg = "아래 소지품을 확인하세요";
 
     Intent foreground_intent ;
+    class TimerHandler extends Handler{
+
+        @Override
+        public void handleMessage(@NonNull Message msg) {
+            //  Looper.prepare();
+            super.handleMessage(msg);
+
+            switch (msg.what){
+                case 0: // 시작 하기
+                    if (timerTime == 0) {
+                        removeMessages(0);
+                        break;
+                    }
+                    sendEmptyMessageDelayed(0, 3000); //3초 마다 반복
+                    Log.d("test", "msg.what:0 time = " + timerTime);
+                    second += 3;
+                    Log.i("Thread", "작동중 " + second + "초"); //배포시 삭제
+                    current_lat = gpsTracker.getLatitude();
+                    current_lng = gpsTracker.getLongitude();
+                    dummy = dis(current_lat, current_lng);
+                    Log.i("Thread", "" + current_lat + "," + current_lng);
+                    Log.i("dis전체 결과", dummy);
+                    String[] s = dummy.split("$");
+                    if (dummy.startsWith("in")) { // 들어왔을때
+                        dlg_msg = "장소에 들어왔습니다. 아래 소지품을 확인하세요";
+                        startVibrate();
+                    } else if (dummy.startsWith("out")) { // 나갔을때
+                        dlg_msg = "에서 나왔습니다. 아래 소지품을 확인하세요";
+                        startVibrate();
+                    } else if (dummy.startsWith("null")) { // 아무것도 아닐때
+
+                    }
+                    break;
+
+                case 1: //일시 정지
+                    removeMessages(0); // 타이머 메시지 삭제
+                    Log.d("test" , "msg.what:1 time = " + timerTime);
+                    break;
+
+                case 2: // 정지 후 타이머 초기화
+                    removeMessages(0); // 타이머 메시지 삭제
+                    timerTime = 30; // 타이머 초기화
+                    Log.d("test" , "msg.what:1 time = " + timerTime);
+                    break;
+
+
+            }
+            //  Looper.loop();
+        }
+    }
 
     public void startVibrate() {
-        v.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
+
+        v.vibrate(VibrationEffect.createOneShot(1000, VibrationEffect.DEFAULT_AMPLITUDE));
         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-        builder.setTitle(msg)
-                .setMessage(dummy.substring(dummy.indexOf("#") + 1))
+//        if(tt!=null){
+//            tt.cancel();
+//            tt=null;
+//        }
+        if(status == 1){ // 타이머 동작 중이라면, 일시 정지 시키기
+            status = 0;
+            // 1번 메시지를 던진다.
+            timer.sendEmptyMessage(1);
+
+        }
+
+        builder.setTitle(dummy.substring(dummy.indexOf("$")+1,dummy.indexOf("#"))+dlg_msg)
+                .setMessage(dummy.substring(dummy.indexOf("#") + 1,dummy.length()-1))
                 .setPositiveButton("확인", new AlertDialog.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
-
                         Log.i("알람", "종료");
-                        stopVibrate();
+                        v.cancel();
 
+                        if(status == 0) // 정지 상태 라면, 재 시작.
+                        {
+                            status = 1;
+                            timer.sendEmptyMessage(0);
+
+                        }
                     }
                 })
                 .setCancelable(false);
         AlertDialog dialog = builder.create();
         dialog.show();
-
     }
-
-    public void stopVibrate() {
-        v.cancel();
-        //handler_start();
-
-
-
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
@@ -183,59 +255,66 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             startService(foreground_intent);
         }
         hash2 = new LinkedHashMap<String, String>();
-        new init_Marker_Get().execute(m_ip + "/marker?id=" + user_id);
-
+        mainload();
         super.onCreate(savedInstanceState);
 
         //사용자의 현재 위치
         setContentView(R.layout.activity_main);
         mapload();
-
         gpsTracker = new GpsTracker(MainActivity.this);
-        mHandler = new Handler(Looper.getMainLooper());
-        mHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                Log.i("Thread", "시작");
-                while (!stopped) {
-                    second+=3;
-                    Log.i("Thread", "작동중 "+second+ "초"); //배포시 삭제
-                    current_lat = gpsTracker.getLatitude();
-                    current_lng = gpsTracker.getLongitude();
-                    dummy = dis(current_lat, current_lng);
-                    Log.i("Thread", "" + current_lat + "," + current_lng);
-                    Log.i("dis전체 결과", dummy);
-                    String[] s = dummy.split("$");
-                  //  Log.i("dis결과 result는?", dummy.substring(0, 3));
-                    if (dummy.startsWith("iin")) { // 들어왔을때
-                        msg = "미리 등록한 소지품들을 챙겼습니까?";
-                        startVibrate();
-                        stop();
-                        location_in = true;
-                    } else if (dummy.startsWith("out") && location_in) { // 나갔을때
-                        msg = "잊으신 물건은 없습니까?";
-                        startVibrate();
-                        stop();
-                        location_in = false;
-                    } else if ((dummy.startsWith("out") || dummy.startsWith("nul")) && location_in) { // 아무것도 아닐때
-                        location_in = false;
-                    }
-                    try {
-                        Thread.sleep(3000);//3초 실제 배포 시 30초로 바꾸기
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }, 10000); //5초 뒤 쓰레드 시작
+        timer = new TimerHandler();
+        if(status == 0) // 정지 상태 라면, 재 시작.
+        {
+            status = 1;
+            timer.sendEmptyMessageDelayed(0,5000);//5초 후 타이머 실행
+        }
+//        timer = new Timer();
+//        tt=timerTaskMaker();
+//        timer.schedule(tt,5000,3000);
 
+       // timer.schedule(t,5000,3000);//5초 뒤 3초 주기로 실행 실제 배포 시 1분이상 주기로 바꾸기
+
+//        mHandler = new Handler(Looper.getMainLooper());
+//        mHandler.postDelayed(new Runnable() {
+//            @Override
+//            public void run() {
+//                Log.i("Thread", "시작");
+//                while (!stopped) {
+//                    second+=3;
+//                    Log.i("Thread", "작동중 "+second+ "초"); //배포시 삭제
+//                    current_lat = gpsTracker.getLatitude();
+//                    current_lng = gpsTracker.getLongitude();
+//                    dummy = dis(current_lat, current_lng);
+//                    Log.i("Thread", "" + current_lat + "," + current_lng);
+//                    Log.i("dis전체 결과", dummy);
+//                    String[] s = dummy.split("$");
+//                  //  Log.i("dis결과 result는?", dummy.substring(0, 3));
+//                    if (dummy.startsWith("iin")) { // 들어왔을때
+//                        msg = "미리 등록한 소지품들을 챙겼습니까?";
+//                        startVibrate();
+//                        stop();
+//                        location_in = true;
+//                    } else if (dummy.startsWith("out") && location_in) { // 나갔을때
+//                        msg = "잊으신 물건은 없습니까?";
+//                        startVibrate();
+//                        stop();
+//                        location_in = false;
+//                    } else if ((dummy.startsWith("out") || dummy.startsWith("nul")) && location_in) { // 아무것도 아닐때
+//                        location_in = false;
+//                    }
+//                    try {
+//                        Thread.sleep(10000);
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//            }
+//        }, 10000); //5초 뒤 쓰레드 시작
         fragmentManager = getFragmentManager();
         mapFragment = (MapFragment) fragmentManager.findFragmentById(R.id.googleMap);
         mapFragment.getMapAsync(this);
-
         pairs = new ArrayList<>();
         hash = new LinkedHashMap<String, String>();
-
         Button listmode = (Button) findViewById(R.id.listMode);
         ListItems = new ArrayList<>();
         listmode.setOnClickListener(new View.OnClickListener() {
@@ -248,8 +327,36 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 finish();
             }
         });
-
     }
+//    public TimerTask timerTaskMaker() {
+//        TimerTask tempTask = new TimerTask() {
+//            @Override
+//            public void run() {
+//                Looper.prepare();
+//                second += 3;
+//                Log.i("Thread", "작동중 " + second + "초"); //배포시 삭제
+//                current_lat = gpsTracker.getLatitude();
+//                current_lng = gpsTracker.getLongitude();
+//                dummy = dis(current_lat, current_lng);
+//                Log.i("Thread", "" + current_lat + "," + current_lng);
+//                Log.i("dis전체 결과", dummy);
+//                String[] s = dummy.split("$");
+//                //  Log.i("dis결과 result는?", dummy.substring(0, 3));
+//                if (dummy.startsWith("in")) { // 들어왔을때
+//                    msg = "장소에 들어왔습니다. 아래 소지품을 확인하세요";
+//                    startVibrate();
+//                } else if (dummy.startsWith("out")) { // 나갔을때
+//                    msg = "에서 나왔습니다. 아래 소지품을 확인하세요";
+//                    startVibrate();
+//                } else if (dummy.startsWith("null")) { // 아무것도 아닐때
+//
+//                }
+//                Looper.loop();
+//            }
+//        };
+//        return tempTask;
+//    }
+
     @Override
     public void onBackPressed() {
         long tempTime = System.currentTimeMillis();
@@ -262,72 +369,69 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             mHandler.removeCallbacksAndMessages(null);
             this.stopService(foreground_intent);
             android.os.Process.killProcess(android.os.Process.myPid());
-
         }
         else
         {
             backPressedTime = tempTime;
         }
     }
-
     //마커와 내 위치들 간 거리 비교
     public String dis(double my_lat, double my_lng) {
         String result = "null";
+
         String in_location_name = "";
         String in_item_name = "";
         if (getitem_count > 0) {
             String[] result_t = new String[getitem_count];
             for (int i = 0; i < location_name.length; i++) {
-                    System.out.println(place_state[i].equals("null"));
-                    if((distance(my_lat,my_lng,marker_lat[i],marker_lng[i])<10.0)&&(place_state[i].equals("null"))||place_state[i].equals("out")) {//마커 반경 10미터 내에 들어 왔을 때
+               // System.out.println("장소  : "+ in_location_name+" , 아이템 : "+in_item_name);
+                System.out.println((distance(my_lat,my_lng,marker_lat[i],marker_lng[i])<50.0));
+                    if((distance(my_lat,my_lng,marker_lat[i],marker_lng[i])<50.0)&&(place_state[i].equals("null"))||place_state[i].equals("out")) {//마커 반경 10미터 내에 들어 왔을 때
                         result_t[i] = "in";
                         place_state[i]="in";
+                        Set<Map.Entry<String, String>> entries = hash.entrySet();
+                        for (Map.Entry<String, String> entry : entries) {
+                            if(location_name[i].equals(entry.getKey())) {
+                                in_location_name = entry.getKey();
+                                in_item_name = entry.getValue();
+                                result = "in";
+                            }
+                        }
+                        System.out.println("장소  : "+ in_location_name+" , 아이템 : "+in_item_name);
                     }
-                    else if((distance(my_lat,my_lng,marker_lat[i],marker_lng[i])>10.0)&&(place_state[i].equals("in")))//마커 내부에 있다가 반경 10미터 외로 떨어졌을 때
+                    else if((distance(my_lat,my_lng,marker_lat[i],marker_lng[i])>50.0)&&(place_state[i].equals("in")))//마커 내부에 있다가 반경 10미터 외로 떨어졌을 때
                     {
                         result_t[i] = "out";
                         place_state[i]="out";
+                        Set<Map.Entry<String, String>> entries = hash.entrySet();
+                        for (Map.Entry<String, String> entry : entries) {
+                            if(location_name[i].equals(entry.getKey())) {
+                                in_location_name = entry.getKey();
+                                in_item_name = entry.getValue();
+                                result = "out";
+                            }
+                        }
                     }
                     else if(place_state[i].equals("null"))
                     {
                         result_t[i]="";
+                        result = "null";
                     }
-//                    result_t[i] = (distance(my_lat, my_lng, marker_lat[i], marker_lng[i]) < 10.0) ? "in" : "out"; //5m 범위 내 들어 왔을 시 in, 이탈 했을 시 out
-//                    result_t[i]
-                    if (result_t[i].equals("in")) {
-                        in_location_name = "$" + location_name[i] + "#";
-                        in_item_name += item_name[i] + ",";
-                    } else if (result_t[i].equals("out")) {
-                        in_location_name = "$" + location_name[i] + "#";
-                        // System.out.println(hash2.get(location_name[i]).toString());
-                        in_item_name += item_name[i] + ",";
-                    }
-                    else
-                    {
-                        in_location_name="";
-                        in_item_name="";
-                    }
-
             }
-            int incount = 0;
-            int outcount = 0;
-            for (int i = 0; i < location_name.length; i++) {
-                if (result_t[i].equals("in")) {
-                    incount++;
-                    result = "iin";
-                } else if (result_t[i].equals("out")) {
-                    outcount++;
-                    result = "out";
-                }
-            }
-//            if (location_name.length == incount)
-//                result = "iin";
-//            else if (location_name.length == outcount)
-//                result = "out";
-
-            return result + in_location_name + in_item_name;
+//            for (int i = 0; i < location_name.length; i++) {
+//                System.out.println(result_t[i].equals("in"));
+//                if (result_t[i].equals("in")) {
+//                    result = "iin";
+//                } else if (result_t[i].equals("out")) {
+//                    result = "out";
+//                }
+//                else
+//                    result = "null";
+//            }
+          //  System.out.println("장소  : "+ in_location_name+" , 아이템 : "+in_item_name);
+            return (result + "$" + in_location_name + "#" + in_item_name);
         } else
-            return result + "$" + in_location_name + "#" + in_item_name;
+            return (result + "$" + in_location_name + "#" + in_item_name);
     }
 
     private double distance(double lat1, double lon1, double lat2, double lon2) {
@@ -353,16 +457,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void mapload() {
         new list_Get().execute(m_ip + "/list?id="+user_id);
     }
-
     public void mainload() {
         new init_Marker_Get().execute(m_ip + "/marker?id=" + user_id);
     }
-
     @Override
     public void onMapReady(final GoogleMap googleMap) {
         // mainload();
         mMap = googleMap;
-
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
@@ -379,7 +480,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onMapLongClick(final LatLng point) {
                 //mapload();
-
+//                timer = new Timer();
+//                tt=timerTaskMaker();
+//                timer.schedule(tt,3000,3000);
                 c_location = new LatLng(point.latitude, point.longitude); //커스텀 위치
                 add_lat = point.latitude;
                 add_lng = point.longitude;
@@ -441,6 +544,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                         "Total " + SelectedItems.size() + " Items Selected.\n" + msg, Toast.LENGTH_LONG)
                                         .show();
                                 new add_Marker_Post().execute(m_ip + "/add_marker");
+                                mainload();
                             }
                         });
                 builder.setNegativeButton("Cancel",
