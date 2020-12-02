@@ -17,31 +17,57 @@ router.post('/', function (req, res) {
     var strArray = item_list.split(',');
     var resultCode = 404;
     var message = '에러가 발생했습니다';
-    for (var i = 0; i < insert_count; i++) {
-        // 삽입을 수행하는 sql문.
-        var sql = 'INSERT INTO marker (name, item, lat, lng, user_id) VALUES (?, ?, ?, ?, ?)';
-        var rowVlaues = [add_name, strArray[i], add_lat, add_lng, userid];
-        // var valueString = rowVlaues.join(",");
 
-        // sql 문의 ?는 두번째 매개변수로 넘겨진 params의 값으로 치환된다.
-        connection.query(sql, rowVlaues, function (err, result) {
-            if (err) {
-                console.log(err);
-                resultCode=404;
-             
-            } else {
-                resultCode = 200;
-                message = strArray[i] + '을 추가 하였습니다.';
-               // console.log(message);
-               // console.log(resultCode);
-            }
-        });
+    var insertValArr=[];
+    for(var i =0;i<insert_count;i++)
+    {        
+        var insertVal=[add_name,strArray[i],add_lat,add_lng,userid];
+        insertValArr.push(insertVal);
+    }
+    console.log(insertValArr);
+    var sql = 'INSERT INTO marker (name, item, lat, lng, user_id) VALUES ?';
+    var sqls="";
+ 
+    connection.query(sql,[insertValArr], function (err, result) {
+        if (err) {
+            console.log(err);
+            resultCode=404;
+         
+        } else {
+            console.log("추가 완료");
+            message = insertValArr+"추가완료";
+            resultCode = 200;
+        }
         res.json({
             'code': resultCode,
             'message': message
         });
-    }
-   
+       
+    });
+
+    // for (var i = 0; i < insert_count; i++) {
+    //     // 삽입을 수행하는 sql문.
+    //     var sql = 'INSERT INTO marker (name, item, lat, lng, user_id) VALUES (?, ?, ?, ?, ?)';
+    //     var rowVlaues = [add_name, strArray[i], add_lat, add_lng, userid];
+    //     // var valueString = rowVlaues.join(",");
+
+    //     // sql 문의 ?는 두번째 매개변수로 넘겨진 params의 값으로 치환된다.
+    //     connection.query(sql, rowVlaues, function (err, result) {
+    //         if (err) {
+    //             console.log(err);
+    //             resultCode=404;
+             
+    //         } else {
+    //             console.log("추가 완료");
+    //             resultCode = 200;
+    //             message = strArray[i] + '을 추가 하였습니다.';
+    //            // console.log(message);
+    //            // console.log(resultCode);
+    //         }
+    //     });
+       
+    // }
+
 });
 
 module.exports = router;

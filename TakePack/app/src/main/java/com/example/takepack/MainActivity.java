@@ -91,6 +91,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public String[] item_name;
     public double[] marker_lat;
     public double[] marker_lng;
+    public String[] place_state;
     String item_temp = "";
     LatLng c_location;
 
@@ -277,15 +278,36 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         if (getitem_count > 0) {
             String[] result_t = new String[getitem_count];
             for (int i = 0; i < location_name.length; i++) {
-                result_t[i] = (distance(my_lat,my_lng,marker_lat[i],marker_lng[i])<10.0) ? "in" : "out"; //5m 범위 내 들어 왔을 시 in, 이탈 했을 시 out
-                if (result_t[i].equals("in")) {
-                    in_location_name = "$" + location_name[i] + "#";
-                    in_item_name += item_name[i] + ",";
-                } else if (result_t[i].equals("out")) {
-                    in_location_name = "$" + location_name[i] + "#";
-                   // System.out.println(hash2.get(location_name[i]).toString());
-                    in_item_name += item_name[i] + ",";
-                }
+                    System.out.println(place_state[i].equals("null"));
+                    if((distance(my_lat,my_lng,marker_lat[i],marker_lng[i])<10.0)&&(place_state[i].equals("null"))||place_state[i].equals("out")) {//마커 반경 10미터 내에 들어 왔을 때
+                        result_t[i] = "in";
+                        place_state[i]="in";
+                    }
+                    else if((distance(my_lat,my_lng,marker_lat[i],marker_lng[i])>10.0)&&(place_state[i].equals("in")))//마커 내부에 있다가 반경 10미터 외로 떨어졌을 때
+                    {
+                        result_t[i] = "out";
+                        place_state[i]="out";
+                    }
+                    else if(place_state[i].equals("null"))
+                    {
+                        result_t[i]="";
+                    }
+//                    result_t[i] = (distance(my_lat, my_lng, marker_lat[i], marker_lng[i]) < 10.0) ? "in" : "out"; //5m 범위 내 들어 왔을 시 in, 이탈 했을 시 out
+//                    result_t[i]
+                    if (result_t[i].equals("in")) {
+                        in_location_name = "$" + location_name[i] + "#";
+                        in_item_name += item_name[i] + ",";
+                    } else if (result_t[i].equals("out")) {
+                        in_location_name = "$" + location_name[i] + "#";
+                        // System.out.println(hash2.get(location_name[i]).toString());
+                        in_item_name += item_name[i] + ",";
+                    }
+                    else
+                    {
+                        in_location_name="";
+                        in_item_name="";
+                    }
+
             }
             int incount = 0;
             int outcount = 0;
@@ -605,13 +627,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 item_name = new String[getitem_count];
                 marker_lat = new double[getitem_count];
                 marker_lng = new double[getitem_count];
+                place_state = new String[getitem_count];
                 for (int i = 0; i < getitem_count; i++) {
                     JSONObject itemobject = getitem.getJSONObject(i);
                     location_name[i] = itemobject.getString("name");
                     item_name[i] = itemobject.getString("item_name");
                     marker_lat[i] = itemobject.getDouble("lat");
                     marker_lng[i] = itemobject.getDouble("lng");
-                    System.out.println(item_name[i]);
+                    place_state[i]="null";
+                 //   System.out.println(item_name[i]);
                 }
 
                 if (code.equals("200")) {
@@ -632,7 +656,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             try {
                 //JSONObject를 만들고 key value 형식으로 값을 저장해준다.
                 JSONObject jsonObject = new JSONObject();
-                System.out.println(user_id+","+add_name+","+add_item_list+","+add_lat+","+add_lng+","+insert_count);
+              //  System.out.println(user_id+","+add_name+","+add_item_list+","+add_lat+","+add_lng+","+insert_count);
                 jsonObject.put("id", user_id);
                 jsonObject.put("name", add_name);
                 jsonObject.put("item_list", add_item_list);
@@ -695,11 +719,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         protected void onPostExecute(String result) {
             try {
                 JSONObject jsonObject = new JSONObject(result);
-                System.out.println("json" + jsonObject);
                 String code = jsonObject.getString("code");
-                System.out.println("code" + code);
                 String msg = jsonObject.getString("message");
-                System.out.println("msg" + msg);
                 if (code.equals("200")) {
                     Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
                 } else {
