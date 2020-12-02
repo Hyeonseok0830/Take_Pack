@@ -9,6 +9,14 @@
 </details>
 
 <details>
+    <summary>개발 환경</summary>
+
+* 서버 - Nodejs
+* 클라이언트 - Android
+* 데이터베이스 - MySql
+</details>
+
+<details>
     <summary>개발 내용</summary>
 
 * 개인 프로젝트
