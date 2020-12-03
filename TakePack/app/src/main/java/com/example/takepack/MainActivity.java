@@ -160,7 +160,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         removeMessages(0);
                         break;
                     }
-                    sendEmptyMessageDelayed(0, 3000); //3초 마다 반복
+                    sendEmptyMessageDelayed(0, 6000); //6초 마다 반복
                     Log.d("test", "msg.what:0 time = " + timerTime);
                     second += 3;
                     Log.i("Thread", "작동중 " + second + "초"); //배포시 삭제
@@ -171,10 +171,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     Log.i("dis전체 결과", dummy);
                     String[] s = dummy.split("$");
                     if (dummy.startsWith("in")) { // 들어왔을때
-                        dlg_msg = "장소에 들어왔습니다. 아래 소지품을 확인하세요";
+                        dlg_msg = " 이라는 장소에 들어왔습니다. 아래 소지품을 확인하세요";
                         startVibrate();
                     } else if (dummy.startsWith("out")) { // 나갔을때
-                        dlg_msg = "에서 나왔습니다. 아래 소지품을 확인하세요";
+                        dlg_msg = " 이라는 장소에서 나왔습니다. 아래 소지품을 확인하세요";
                         startVibrate();
                     } else if (dummy.startsWith("null")) { // 아무것도 아닐때
 
@@ -266,7 +266,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         if(status == 0) // 정지 상태 라면, 재 시작.
         {
             status = 1;
-            timer.sendEmptyMessageDelayed(0,5000);//5초 후 타이머 실행
+            timer.sendEmptyMessageDelayed(0,10000);//10초 후 타이머 실행
         }
 //        timer = new Timer();
 //        tt=timerTaskMaker();
@@ -598,7 +598,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 //        markerOptions.icon(BitmapDescriptorFactory.fromBitmap(smallMarker));
 //       // markerOptions.alpha(0.8f);
 //        googleMap.addMarker(markerOptions);
-        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 16));
+        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 16));
     }
 
     public class list_Get extends AsyncTask<String,String,String> {
