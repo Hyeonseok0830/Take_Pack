@@ -35,6 +35,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.json.JSONArray;
@@ -145,6 +146,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     boolean location_in = false;
     String dlg_msg = "아래 소지품을 확인하세요";
+
+    Marker marker;
 
     Intent foreground_intent ;
     class TimerHandler extends Handler{
@@ -571,16 +574,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             }
         }
+
         MarkerOptions m = new MarkerOptions();
         Set<Map.Entry<String, String>> entries = hash.entrySet();
         int x = 0;
         for (Map.Entry<String, String> entry : entries) {
             System.out.print("key: " + entry.getKey());
             System.out.println(", Value: " + entry.getValue());
+
             m.title(entry.getKey())
                     .snippet(entry.getValue().substring(0, entry.getValue().length() - 1))
                     .position(new LatLng(pairs.get(x).first, pairs.get(x).second));
-            googleMap.addMarker(m);
+
+            marker = googleMap.addMarker(m);
             x++;
         }
         double latitude = gpsTracker.getLatitude();
@@ -588,6 +594,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         current_lat = latitude;
         current_lng = longitude;
 
+        
         LatLng location = new LatLng(current_lat,current_lng); //현재 내 위치
         markerOptions.title("현재 내 위치");
 //        markerOptions.snippet("스니펫");
@@ -599,6 +606,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 //       // markerOptions.alpha(0.8f);
 //        googleMap.addMarker(markerOptions);
         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 16));
+
     }
 
     public class list_Get extends AsyncTask<String,String,String> {
@@ -738,7 +746,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     item_name[i] = itemobject.getString("item_name");
                     marker_lat[i] = itemobject.getDouble("lat");
                     marker_lng[i] = itemobject.getDouble("lng");
-                    place_state[i]="null";
+                    place_state[i]="null";//마커추가시 작동 -> 알림 한번 더 울리는 현상 발생
                  //   System.out.println(item_name[i]);
                 }
 
