@@ -43,8 +43,8 @@ public class LoginActivity extends AppCompatActivity {
     EditText id;
     EditText pw;
     CheckBox cb;
-    public String mip = "http://192.168.0.2:3000";//외부ip
-   // public String mip = "192.168.219.100:8888";//내부ip
+    public String mip = "http://59.151.245.53:3000";//외부ip
+   // public String mip = "192.168.0.2:3000";//내부ip
    SharedPreferences pref;
    SharedPreferences.Editor editor;
     private static final int GPS_ENABLE_REQUEST_CODE = 2001;
