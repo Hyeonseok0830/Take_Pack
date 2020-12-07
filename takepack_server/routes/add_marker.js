@@ -15,18 +15,18 @@ router.post('/', function (req, res) {
     var add_lng = req.body.lng;
     var insert_count = req.body.count;
     var strArray = item_list.split(',');
+    var marker_state = null;
     var resultCode = 404;
     var message = '에러가 발생했습니다';
 
     var insertValArr=[];
     for(var i =0;i<insert_count;i++)
     {        
-        var insertVal=[add_name,strArray[i],add_lat,add_lng,userid];
+        var insertVal=[add_name,strArray[i],add_lat,add_lng,marker_state,userid];
         insertValArr.push(insertVal);
     }
     console.log(insertValArr);
-    var sql = 'INSERT INTO marker (name, item, lat, lng, user_id) VALUES ?';
-    var sqls="";
+    var sql = 'INSERT INTO marker (name, item, lat, lng, state, user_id) VALUES ?'; 
  
     connection.query(sql,[insertValArr], function (err, result) {
         if (err) {

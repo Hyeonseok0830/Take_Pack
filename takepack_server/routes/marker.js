@@ -29,6 +29,7 @@ router.get('/', function (req, res) {
                 data.item_name = result[i].item;
                 data.lat = result[i].lat;
                 data.lng = result[i].lng;
+                data.state = result[i].state;
                 List.push(data);
             }
 
