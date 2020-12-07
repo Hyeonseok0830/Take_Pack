@@ -19,6 +19,8 @@ var additemRouer = require('./routes/add_item');
 var delitemRouer = require('./routes/del_item');
 var markerRouter = require('./routes/marker');
 var addmarkerRouter = require('./routes/add_marker');
+var updatemarkerRouter = require('./routes/update_marker');
+
 
 app.use('/login',loginRouter);
 app.use('/join',joinRouter);
@@ -27,7 +29,7 @@ app.use('/add_item',additemRouer);
 app.use('/del_item',delitemRouer);
 app.use('/marker',markerRouter);
 app.use('/add_marker',addmarkerRouter);
-
+app.use('/update_marker',updatemarkerRouter);
 
 app.listen(3000, '192.168.0.2', function () {
     console.log('서버 실행 중...');

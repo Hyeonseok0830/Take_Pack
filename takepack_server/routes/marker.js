@@ -1,15 +1,10 @@
 var express = require('express');
 var router = express.Router();
-
 var mysql      = require('mysql');
 var dbconfig = require('../config/database.js');
 var connection = mysql.createConnection(dbconfig);
 
-
-
-
-router.get('/', function (req, res) {
-    
+router.get('/', function (req, res) {    
     console.log('Main 접속');
     var userid = req.query.id;
     console.log(userid);
