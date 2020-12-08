@@ -53,6 +53,8 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,7 +68,7 @@ import javax.net.ssl.HttpsURLConnection;
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback {
 
     private final long FINISH_INTERVAL_TIME = 2000;
-    private long   backPressedTime = 0;
+    private long backPressedTime = 0;
 
 
     LoginActivity lg = new LoginActivity();
@@ -124,10 +126,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     static TimerTask tt2;
     static Timer timer2;
     private boolean stopped = false;
+
     public void stop() {
         stopped = true;
     }
-    public void handler_start() {stopped = false; }
+
+    public void handler_start() {
+        stopped = false;
+    }
+
     private int second = 0;
 
 
@@ -136,7 +143,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     // Timer 를 처리해주는 핸들러
     TimerHandler timer;
     boolean isRunning = true;
-    int status = 0 ; // 0:정지, 1:시작, 2:일시정지
+    int status = 0; // 0:정지, 1:시작, 2:일시정지
 
     //진동
     boolean vib = false;
@@ -149,43 +156,54 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     Marker marker;
 
-    Intent foreground_intent ;
+    Intent foreground_intent;
+
     public void mapload() {
-        new list_Get().execute(m_ip + "/list?id="+user_id);
+        new list_Get().execute(m_ip + "/list?id=" + user_id);
     }
+
     public void mainload() {
         new init_Marker_Get().execute(m_ip + "/marker?id=" + user_id);
     }
-    public void update_marker_state(String place_name,String state){ new Update_Marker_Get().execute(m_ip+"/update_marker?id="+user_id+"&place_name="+place_name+"&state="+state);}
-    class TimerHandler extends Handler{
+
+    public void update_marker_state(String place_name, String state) {
+        new Update_Marker_Get().execute(m_ip + "/update_marker?id=" + user_id + "&place_name=" + place_name + "&state=" + state);
+    }
+
+    class TimerHandler extends Handler {
 
         @Override
         public void handleMessage(@NonNull Message msg) {
             //  Looper.prepare();
             super.handleMessage(msg);
 
-            switch (msg.what){
+            switch (msg.what) {
                 case 0: // 시작 하기
                     if (timerTime == 0) {
                         removeMessages(0);
                         break;
                     }
-                    sendEmptyMessageDelayed(0, 6000); //6초 마다 반복
-                    Log.d("test", "msg.what:0 time = " + timerTime);
-                    second += 3;
+                    mainload();
+
+                    sendEmptyMessageDelayed(0, 10000); //10초 마다 반복
+
+                    //Log.d("test", "msg.what:0 time = " + timerTime);
+                    second += 10;
                     Log.i("Thread", "작동중 " + second + "초"); //배포시 삭제
                     current_lat = gpsTracker.getLatitude();
                     current_lng = gpsTracker.getLongitude();
                     dummy = dis(current_lat, current_lng);
-                    Log.i("Thread", "" + current_lat + "," + current_lng);
-                    Log.i("dis전체 결과", dummy);
-                    String[] s = dummy.split("$");
+
+                    //Log.i("dis전체 결과", dummy);
+                 //   System.out.println(dummy);
+
                     if (dummy.startsWith("in")) { // 들어왔을때
                         dlg_msg = " 이라는 장소에 들어왔습니다. 아래 소지품을 확인하세요";
-                        startVibrate();
+                        startVibrate(); //두번 울리는거 수정 필요
+
                     } else if (dummy.startsWith("out")) { // 나갔을때
                         dlg_msg = " 이라는 장소에서 나왔습니다. 아래 소지품을 확인하세요";
-                        update_marker_state("","");
+                        update_marker_state("", "");
                         startVibrate();
                     } else if (dummy.startsWith("null")) { // 아무것도 아닐때
 
@@ -194,13 +212,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                 case 1: //일시 정지
                     removeMessages(0); // 타이머 메시지 삭제
-                    Log.d("test" , "msg.what:1 time = " + timerTime);
+                    Log.d("test", "msg.what:1 time = " + timerTime);
                     break;
 
                 case 2: // 정지 후 타이머 초기화
                     removeMessages(0); // 타이머 메시지 삭제
                     timerTime = 30; // 타이머 초기화
-                    Log.d("test" , "msg.what:1 time = " + timerTime);
+                    Log.d("test", "msg.what:1 time = " + timerTime);
                     break;
 
 
@@ -213,28 +231,22 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         v.vibrate(VibrationEffect.createOneShot(1000, VibrationEffect.DEFAULT_AMPLITUDE));
         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-//        if(tt!=null){
-//            tt.cancel();
-//            tt=null;
-//        }
-        if(status == 1){ // 타이머 동작 중이라면, 일시 정지 시키기
+        if (status == 1) { // 타이머 동작 중이라면, 일시 정지 시키기
             status = 0;
             // 1번 메시지를 던진다.
             timer.sendEmptyMessage(1);
-
         }
-
-        builder.setTitle(dummy.substring(dummy.indexOf("$")+1,dummy.indexOf("#"))+dlg_msg)
-                .setMessage(dummy.substring(dummy.indexOf("#") + 1,dummy.length()-1))
+        mainload();
+        builder.setTitle(dummy.substring(dummy.indexOf("$") + 1, dummy.indexOf("#")) + dlg_msg)
+                .setMessage(dummy.substring(dummy.indexOf("#") + 1, dummy.length() - 1))
                 .setPositiveButton("확인", new AlertDialog.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         Log.i("알람", "종료");
                         v.cancel();
-                        if(status == 0) // 정지 상태 라면, 재 시작.
+                        if (status == 0) // 정지 상태 라면, 재 시작.
                         {
                             status = 1;
                             timer.sendEmptyMessage(0);
-
                         }
                     }
                 })
@@ -242,15 +254,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         AlertDialog dialog = builder.create();
         dialog.show();
     }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
         pref = getSharedPreferences("pref", Activity.MODE_PRIVATE);
-        String sid=pref.getString("id_save", "");
-        user_id= sid;
+        String sid = pref.getString("id_save", "");
+        user_id = sid;
 
-        foreground_intent= new Intent(this, ForegroundService.class);
+        foreground_intent = new Intent(this, ForegroundService.class);
 
         if (Build.VERSION.SDK_INT >= 26) {
             startForegroundService(foreground_intent);
@@ -266,53 +279,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapload();
         gpsTracker = new GpsTracker(MainActivity.this);
         timer = new TimerHandler();
-        if(status == 0) // 정지 상태 라면, 재 시작.
+        if (status == 0) // 정지 상태 라면, 재 시작.
         {
             status = 1;
-            timer.sendEmptyMessageDelayed(0,10000);//10초 후 타이머 실행
+            timer.sendEmptyMessageDelayed(0, 10000);//10초 후 타이머 실행
         }
-//        timer = new Timer();
-//        tt=timerTaskMaker();
-//        timer.schedule(tt,5000,3000);
-
-       // timer.schedule(t,5000,3000);//5초 뒤 3초 주기로 실행 실제 배포 시 1분이상 주기로 바꾸기
-
-//        mHandler = new Handler(Looper.getMainLooper());
-//        mHandler.postDelayed(new Runnable() {
-//            @Override
-//            public void run() {
-//                Log.i("Thread", "시작");
-//                while (!stopped) {
-//                    second+=3;
-//                    Log.i("Thread", "작동중 "+second+ "초"); //배포시 삭제
-//                    current_lat = gpsTracker.getLatitude();
-//                    current_lng = gpsTracker.getLongitude();
-//                    dummy = dis(current_lat, current_lng);
-//                    Log.i("Thread", "" + current_lat + "," + current_lng);
-//                    Log.i("dis전체 결과", dummy);
-//                    String[] s = dummy.split("$");
-//                  //  Log.i("dis결과 result는?", dummy.substring(0, 3));
-//                    if (dummy.startsWith("iin")) { // 들어왔을때
-//                        msg = "미리 등록한 소지품들을 챙겼습니까?";
-//                        startVibrate();
-//                        stop();
-//                        location_in = true;
-//                    } else if (dummy.startsWith("out") && location_in) { // 나갔을때
-//                        msg = "잊으신 물건은 없습니까?";
-//                        startVibrate();
-//                        stop();
-//                        location_in = false;
-//                    } else if ((dummy.startsWith("out") || dummy.startsWith("nul")) && location_in) { // 아무것도 아닐때
-//                        location_in = false;
-//                    }
-//                    try {
-//                        Thread.sleep(10000);
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
-//            }
-//        }, 10000); //5초 뒤 쓰레드 시작
         fragmentManager = getFragmentManager();
         mapFragment = (MapFragment) fragmentManager.findFragmentById(R.id.googleMap);
         mapFragment.getMapAsync(this);
@@ -331,107 +302,69 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
     }
-//    public TimerTask timerTaskMaker() {
-//        TimerTask tempTask = new TimerTask() {
-//            @Override
-//            public void run() {
-//                Looper.prepare();
-//                second += 3;
-//                Log.i("Thread", "작동중 " + second + "초"); //배포시 삭제
-//                current_lat = gpsTracker.getLatitude();
-//                current_lng = gpsTracker.getLongitude();
-//                dummy = dis(current_lat, current_lng);
-//                Log.i("Thread", "" + current_lat + "," + current_lng);
-//                Log.i("dis전체 결과", dummy);
-//                String[] s = dummy.split("$");
-//                //  Log.i("dis결과 result는?", dummy.substring(0, 3));
-//                if (dummy.startsWith("in")) { // 들어왔을때
-//                    msg = "장소에 들어왔습니다. 아래 소지품을 확인하세요";
-//                    startVibrate();
-//                } else if (dummy.startsWith("out")) { // 나갔을때
-//                    msg = "에서 나왔습니다. 아래 소지품을 확인하세요";
-//                    startVibrate();
-//                } else if (dummy.startsWith("null")) { // 아무것도 아닐때
-//
-//                }
-//                Looper.loop();
-//            }
-//        };
-//        return tempTask;
-//    }
 
     @Override
     public void onBackPressed() {
         long tempTime = System.currentTimeMillis();
         long intervalTime = tempTime - backPressedTime;
 
-        if (0 <= intervalTime && FINISH_INTERVAL_TIME >= intervalTime)
-        {
+        if (0 <= intervalTime && FINISH_INTERVAL_TIME >= intervalTime) {
             //연속 두번 backbtn 눌렀을 때 (INTERVAL 2초)
             super.onBackPressed();
             mHandler.removeCallbacksAndMessages(null);
             this.stopService(foreground_intent);
             android.os.Process.killProcess(android.os.Process.myPid());
-        }
-        else
-        {
+        } else {
             backPressedTime = tempTime;
         }
     }
+
     //마커와 내 위치들 간 거리 비교
     public String dis(double my_lat, double my_lng) {
-        mainload();
+
         String result = "null";
         String in_location_name = "";
         String in_item_name = "";
+        String[] location;
+        location = new HashSet<String>(Arrays.asList(location_name)).toArray(new String[0]);
         if (getitem_count > 0) {
             String[] result_t = new String[getitem_count];
-            for (int i = 0; i < location_name.length; i++) {
-               // System.out.println("장소  : "+ in_location_name+" , 아이템 : "+in_item_name);
-                //System.out.println((distance(my_lat,my_lng,marker_lat[i],marker_lng[i])<50.0));
-                    if((distance(my_lat,my_lng,marker_lat[i],marker_lng[i])<50.0)&&(place_state[i].equals("null"))) {//마커 반경 10미터 내에 들어 왔을 때
-                        Set<Map.Entry<String, String>> entries = hash.entrySet();
-                        for (Map.Entry<String, String> entry : entries) {
-                            if(location_name[i].equals(entry.getKey())) {
-                                in_location_name = entry.getKey();
-                                in_item_name = entry.getValue();
-                                result = "in";
-                                update_marker_state(in_location_name,result);
-                            }
-                        }
-                        System.out.println("장소  : "+ in_location_name+" , 아이템 : "+in_item_name);
-                    }
-                    else if((distance(my_lat,my_lng,marker_lat[i],marker_lng[i])>50.0)&&(place_state[i].equals("in")))//마커 내부에 있다가 반경 10미터 외로 떨어졌을 때
-                    {
-                        result_t[i] = "out";
-                        place_state[i]="out";
-                        Set<Map.Entry<String, String>> entries = hash.entrySet();
-                        for (Map.Entry<String, String> entry : entries) {
-                            if(location_name[i].equals(entry.getKey())) {
-                                in_location_name = entry.getKey();
-                                in_item_name = entry.getValue();
-                                result = "out";
-                                update_marker_state(in_location_name,result);
-                            }
+            for (int i = 0; i < location.length; i++) {
+                if ((distance(my_lat, my_lng, marker_lat[i], marker_lng[i]) < 50.0) && (place_state[i].equals("null"))) {//마커 반경 10미터 내에 들어 왔을 때
+                    Set<Map.Entry<String, String>> entries = hash.entrySet();
+                    for (Map.Entry<String, String> entry : entries) {
+                        if (location[i].equals(entry.getKey())) {
+
+                            in_location_name = entry.getKey();
+                            in_item_name = entry.getValue();
+                            result = "in";
+                            update_marker_state(in_location_name, result);
                         }
                     }
-                    else if(place_state[i].equals("null"))
-                    {
-                        result_t[i]="";
-                        result = "null";
+                   // System.out.println("장소  : " + in_location_name + " , 아이템 : " + in_item_name);
+                    break;
+
+                } else if ((distance(my_lat, my_lng, marker_lat[i], marker_lng[i]) > 50.0) && (place_state[i].equals("in")))//마커 내부에 있다가 반경 10미터 외로 떨어졌을 때
+                {
+                    result_t[i] = "out";
+                    place_state[i] = "out";
+                    Set<Map.Entry<String, String>> entries = hash.entrySet();
+                    for (Map.Entry<String, String> entry : entries) {
+                        if (location[i].equals(entry.getKey())) {
+                            in_location_name = entry.getKey();
+                            in_item_name = entry.getValue();
+                            result = "out";
+                            update_marker_state(in_location_name, result);
+
+                        }
                     }
+                    break;
+                } else if (place_state[i].equals("null")) {
+                    result_t[i] = "";
+                    result = "null";
+                }
             }
-//            for (int i = 0; i < location_name.length; i++) {
-//                System.out.println(result_t[i].equals("in"));
-//                if (result_t[i].equals("in")) {
-//                    result = "iin";
-//                } else if (result_t[i].equals("out")) {
-//                    result = "out";
-//                }
-//                else
-//                    result = "null";
-//            }
-          //  System.out.println("장소  : "+ in_location_name+" , 아이템 : "+in_item_name);
+
             return (result + "$" + in_location_name + "#" + in_item_name);
         } else
             return (result + "$" + in_location_name + "#" + in_item_name);
@@ -454,7 +387,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private double rad2deg(double rad) {
-        return (rad * 180.0/Math.PI);
+        return (rad * 180.0 / Math.PI);
     }
 
 
@@ -492,11 +425,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                 edittext.setHint("장소이름 추가");
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                if (ListItems.size() == 0)
-                {
+                if (ListItems.size() == 0) {
                     builder.setTitle("장소추가(아이템을 추가하면 함께 등록할 수 있습니다.)");
-                }
-                else {
+                } else {
                     builder.setTitle("장소추가");
                 }
                 builder.setView(edittext);
@@ -526,7 +457,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                     temp += ListItems.get(index) + ",";
                                 }
                                 mop.title(edittext.getText().toString());
-                                if(temp.length()>0)
+                                if (temp.length() > 0)
                                     temp = temp.substring(0, temp.length() - 1);
                                 else {
                                     Toast.makeText(getApplicationContext(), "아이템을 선택해 주세요", Toast.LENGTH_SHORT).show();
@@ -574,8 +505,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         Set<Map.Entry<String, String>> entries = hash.entrySet();
         int x = 0;
         for (Map.Entry<String, String> entry : entries) {
-            System.out.print("key: " + entry.getKey());
-            System.out.println(", Value: " + entry.getValue());
+         //   System.out.print("key: " + entry.getKey());
+         //   System.out.println(", Value: " + entry.getValue());
 
             m.title(entry.getKey())
                     .snippet(entry.getValue().substring(0, entry.getValue().length() - 1))
@@ -589,8 +520,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         current_lat = latitude;
         current_lng = longitude;
 
-        
-        LatLng location = new LatLng(current_lat,current_lng); //현재 내 위치
+
+        LatLng location = new LatLng(current_lat, current_lng); //현재 내 위치
         markerOptions.title("현재 내 위치");
 //        markerOptions.snippet("스니펫");
         markerOptions.position(location);
@@ -604,7 +535,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     }
 
-    public class list_Get extends AsyncTask<String,String,String> {
+    public class list_Get extends AsyncTask<String, String, String> {
         @Override
         protected String doInBackground(String... urls) {
 
@@ -612,7 +543,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             BufferedReader reader = null;
             try {
                 URL url = new URL(urls[0]);
-                con = (HttpURLConnection)url.openConnection();
+                con = (HttpURLConnection) url.openConnection();
                 con.connect();
                 InputStream stream = con.getInputStream();
                 reader = new BufferedReader(new InputStreamReader(stream));
@@ -624,10 +555,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
-            }finally {
+            } finally {
                 con.disconnect();
                 try {
-                    if(reader != null)
+                    if (reader != null)
                         reader.close();
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -635,6 +566,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
             return null;
         }
+
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
@@ -661,6 +593,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         }
     }
+
     //서버 통신 부분
     public class init_Marker_Get extends AsyncTask<String, String, String> {
         @Override
@@ -717,6 +650,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             return null;
         }
+
         protected void onPostExecute(String result) {
             try {
                 JSONObject jsonObject = new JSONObject(result);
@@ -738,13 +672,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     item_name[i] = itemobject.getString("item_name");
                     marker_lat[i] = itemobject.getDouble("lat");
                     marker_lng[i] = itemobject.getDouble("lng");
-                    place_state[i]= itemobject.getString("state");
-                            //마커추가시 작동 -> 알림 한번 더 울리는 현상 발생
-                 //   System.out.println(item_name[i]);
+                    place_state[i] = itemobject.getString("state");
                 }
 
                 if (code.equals("200")) {
-                    Toast.makeText(getApplicationContext(), "마커정보받아옴", Toast.LENGTH_SHORT).show();
+                   // Toast.makeText(getApplicationContext(), "마커정보받아옴", Toast.LENGTH_SHORT).show();
 
                 } else {
                     Toast.makeText(getApplicationContext(), "실패", Toast.LENGTH_SHORT).show();
@@ -761,7 +693,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             try {
                 //JSONObject를 만들고 key value 형식으로 값을 저장해준다.
                 JSONObject jsonObject = new JSONObject();
-              //  System.out.println(user_id+","+add_name+","+add_item_list+","+add_lat+","+add_lng+","+insert_count);
+                //  System.out.println(user_id+","+add_name+","+add_item_list+","+add_lat+","+add_lng+","+insert_count);
                 jsonObject.put("id", user_id);
                 jsonObject.put("name", add_name);
                 jsonObject.put("item_list", add_item_list);
@@ -836,6 +768,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         }
     }
+
     public class Update_Marker_Get extends AsyncTask<String, String, String> {
         @Override
         protected String doInBackground(String... urls) {
@@ -893,6 +826,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             return null;
         }
+
         protected void onPostExecute(String result) {
             try {
                 JSONObject jsonObject = new JSONObject(result);

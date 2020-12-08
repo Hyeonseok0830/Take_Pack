@@ -5,9 +5,9 @@ var dbconfig = require('../config/database.js');
 var connection = mysql.createConnection(dbconfig);
 
 router.get('/', function (req, res) {    
-    console.log('Main 접속');
+  //  console.log('Main 접속');
     var userid = req.query.id;
-    console.log(userid);
+  //  console.log(userid);
     var sql = 'select * from marker where user_id =' + mysql.escape(userid) + 'order by name';
     connection.query(sql, userid, function (err, result) {
         var resultCode = 404;
